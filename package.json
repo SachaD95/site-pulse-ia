@@ -1,0 +1,12 @@
+{
+  "name": "ai-pulse-interactive",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Présentation interactive + questionnaire live pour atelier IA interne",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
