@@ -16,11 +16,11 @@ let voteAllocation = {};
 let anonId = null;
 
 const slideInteraction = {
-  2:'frequency', 3:'appetite', 4:'priorities', 12:'ideaWall', 14:'ideaVote', 15:'quizPrompt', 16:'quizAgent', 18:'finalTest'
+  2:'frequency', 3:'timeSaved', 4:'appetite', 5:'priorities', 13:'ideaWall', 15:'ideaVote', 16:'quizPrompt', 17:'quizAgent', 19:'finalTest'
 };
 
 const slideTitles = [
-  'Introduction', 'Pourquoi sommes-nous ici ?', 'AI Pulse', 'Appétit pour l’automatisation', 'Priorités d’automatisation',
+  'Introduction', 'Pourquoi sommes-nous ici ?', 'Fréquence d’usage', 'Temps gagné', 'Appétit pour l’automatisation', 'Priorités d’automatisation',
   'Dashboard collectif', 'Comment fonctionne l’IA ?', 'Prompt Lab', 'Folder / espace de travail', 'GPT spécialisé',
   'Agents', 'Meeting Notes', 'Mur des idées IA', 'Regroupement des idées', 'Vote sur les idées',
   'Mini quiz — Prompt', 'Mini quiz — Agent', 'Quel outil IA ?', 'Après cette session', 'Conclusion'
@@ -251,7 +251,7 @@ function startTimerLoop(){
 }
 
 function renderSlide(i){
-  const renderers=[slideIntro,slideObjectives,()=>slidePoll('frequency'),()=>slidePoll('appetite'),()=>slidePoll('priorities'),slideDashboard,slideHowAI,slidePromptLab,slideWorkspace,slideSpecialized,slideAgents,slideMeeting,slideIdeas,slideGrouping,slideIdeaVote,()=>slideQuiz('quizPrompt'),()=>slideQuiz('quizAgent'),slideDecision,()=>slidePoll('finalTest'),slideFinal];
+  const renderers=[slideIntro,slideObjectives,()=>slidePoll('frequency'),()=>slidePoll('timeSaved'),()=>slidePoll('appetite'),()=>slidePoll('priorities'),slideDashboard,slideHowAI,slidePromptLab,slideWorkspace,slideSpecialized,slideAgents,slideMeeting,slideIdeas,slideGrouping,slideIdeaVote,()=>slideQuiz('quizPrompt'),()=>slideQuiz('quizAgent'),slideDecision,()=>slidePoll('finalTest'),slideFinal];
   return renderers[i]?.() || '';
 }
 
@@ -265,7 +265,7 @@ function slideObjectives(){
 
 function slidePoll(id){
   const def=definitions[id]; const agg=state.aggregates[id]||{total:0,counts:{}}; const active=state.activeInteraction===id; const show=active&&state.showResults;
-  const label=id==='frequency'?'AI Pulse':id==='appetite'?"Appétit pour l’automatisation":id==='priorities'?"Priorités collectives":"Dernière interaction";
+  const label=id==='frequency'?'AI Pulse':id==='timeSaved'?'Impact perçu':id==='appetite'?"Appétit pour l’automatisation":id==='priorities'?"Priorités collectives":"Dernière interaction";
   let results='';
   if(id==='appetite' && show){ results=`<div class="gauge-wrap"><div class="gauge" style="--pct:${state.dashboard.appetiteScore}"><strong>${state.dashboard.appetiteScore}%</strong><span>appétit collectif</span></div></div>`; }
   else if(show) results=renderBars(def,agg,id==='priorities');
@@ -279,14 +279,23 @@ function renderBars(def,agg,ranking=false){
   return `<div class="result-list">${opts.map(([id,label])=>{const n=agg.counts[id]||0; const width=ranking?Math.round(n/max*100):pct(n,agg.total); return `<div class="result-row"><label>${esc(label)}</label><div class="bar"><i style="width:${width}%"></i></div><b>${ranking?n:pct(n,agg.total)+'%'}</b></div>`}).join('')}</div>`;
 }
 
+function miniDistribution(def, agg){
+  const total=agg.total||1;
+  return `<div class="mini-dist">${(def.options||[]).map(([id,label])=>{const n=agg.counts[id]||0;return `<div><span>${esc(label)}</span><div class="mini-bar"><i style="width:${pct(n,total)}%"></i></div><b>${pct(n,total)}%</b></div>`}).join('')}</div>`;
+}
+
 function slideDashboard(){
   const d=state.dashboard;
-  return `<article class="slide"><div class="eyebrow">Synthèse live</div><h2>Voilà où nous en sommes.</h2><div class="dashboard-grid">
-    <div class="kpi"><strong>${d.daily}%</strong><span>utilisent l’IA quotidiennement</span></div>
-    <div class="kpi"><strong>${d.wantsAuto}%</strong><span>souhaitent davantage d’automatisation</span></div>
-    <div class="kpi maturity"><div class="mini-ring" style="--pct:${d.maturity}"><b>${d.maturity}</b></div><div><strong style="font-size:18px">Maturité IA</strong><span style="display:block;margin-top:5px">Indice session : 60% usage + 40% appétit.</span></div></div>
+  const f=state.aggregates.frequency||{total:0,counts:{}};
+  const t=state.aggregates.timeSaved||{total:0,counts:{}};
+  const a=state.aggregates.appetite||{total:0,counts:{}};
+  return `<article class="slide dashboard-slide"><div class="eyebrow">Synthèse live · vos réponses</div><h2>Voilà où nous en sommes.</h2><div class="dashboard-grid dashboard-rich">
+    <div class="kpi"><strong>${d.daily}%</strong><span>utilisent l’IA au moins quotidiennement</span>${miniDistribution(definitions.frequency,f)}</div>
+    <div class="kpi focus-time"><div class="focus-head"><span class="focus-icon">⌕</span><div><b>LOUPE · TEMPS GAGNÉ</b><small>estimation collective</small></div></div><strong>${d.avgMinutesSavedLabel}</strong><span>gagnées par jour en moyenne, d’après les réponses</span>${miniDistribution(definitions.timeSaved,t)}<div class="annualized">≈ ${d.annualHoursSaved} h / personne / an*</div></div>
+    <div class="kpi"><strong>${d.wantsAuto}%</strong><span>souhaitent davantage d’automatisation</span><div class="gauge-line"><i style="width:${d.appetiteScore}%"></i></div><small>Indice d’appétit : ${d.appetiteScore}/100</small></div>
     <div class="kpi top-list"><strong style="font-size:18px;margin-bottom:8px">Top 3 des tâches à automatiser</strong>${d.top.length?d.top.map((x,i)=>`<div class="rank-item"><span class="rank">${i+1}</span><span class="rank-label">${esc(x.label)}</span><b>${x.count}</b></div>`).join(''):'<span>En attente de réponses.</span>'}</div>
-    <div class="kpi"><span>Réponses prises en compte</span><strong>${state.aggregates.frequency.total}</strong></div>
+    <div class="kpi research-card"><div class="panel-label">Ce que dit la recherche</div><h3>Le bon ordre de grandeur : des dizaines de minutes, pas un chiffre universel.</h3><div class="research-facts"><p><b>&gt; 30 min/jour</b> — les “power users” IA interrogés par Microsoft & LinkedIn déclarent dépasser ce seuil. <em>Work Trend Index, mai 2024.</em></p><p><b>≈ 2 h/semaine</b> — baisse du temps passé sur les e-mails chez les utilisateurs actifs dans une expérimentation sur 7 137 employés. <em>NBER, révision nov. 2025.</em></p><p><b>≈ 25% plus vite</b> — sur des tâches adaptées à l’IA chez 758 consultants BCG. <em>Harvard/BCG, 2023.</em></p></div></div>
+    <div class="kpi role-bench"><div class="panel-label">Commercial / gestion de projet</div><p><b>Commercial :</b> la recherche McKinsey décrit surtout un déplacement du temps des tâches back-office vers le client ; son estimation porte sur <b>+3 à 5% de productivité commerciale</b>, pas sur un nombre de minutes universel.</p><p><b>Gestion de projet :</b> le repère le plus solide est celui des knowledge workers : e-mails, réunions, recherche et rédaction sont les postes où les gains ont été mesurés.</p><small>*Projection interne : moyenne pondérée de la question “temps gagné” × 220 jours ouvrés. “Plusieurs heures” est compté prudemment à 2 h/jour.</small></div>
   </div></article>`;
 }
 
@@ -390,7 +399,7 @@ function slideDecision(){
 }
 
 function slideFinal(){
-  return `<article class="slide"><div class="eyebrow">Conclusion</div><h2>L’objectif n’est pas d’utiliser plus d’IA.</h2><div class="final-reveal glow-text">C’est de supprimer davantage de travail sans valeur.</div><div class="loop-row"><span>Tester</span><span>→</span><span>Mesurer</span><span>→</span><span>Garder ce qui fonctionne</span><span>→</span><span>Automatiser</span></div><button class="btn primary" style="margin-top:28px;align-self:flex-start" data-goto="12">Proposer une idée IA</button></article>`;
+  return `<article class="slide"><div class="eyebrow">Conclusion</div><h2>L’objectif n’est pas d’utiliser plus d’IA.</h2><div class="final-reveal glow-text">C’est de supprimer davantage de travail sans valeur.</div><div class="loop-row"><span>Tester</span><span>→</span><span>Mesurer</span><span>→</span><span>Garder ce qui fonctionne</span><span>→</span><span>Automatiser</span></div><button class="btn primary" style="margin-top:28px;align-self:flex-start" data-goto="13">Proposer une idée IA</button></article>`;
 }
 
 function bindSlideEvents(){

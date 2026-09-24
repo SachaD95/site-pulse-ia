@@ -1,42 +1,414 @@
 {
   "AI-2026-09": {
     "id": "AI-2026-09",
-    "presenterKey": "7d13fb57746dc51f",
-    "createdAt": "2026-09-24T08:51:34.098Z",
-    "updatedAt": "2026-09-24T10:47:04.481Z",
+    "presenterKey": "1b489c93588629f9",
+    "createdAt": "2026-09-24T12:20:40.248Z",
+    "updatedAt": "2026-09-24T12:20:59.701Z",
     "slideIndex": 0,
     "activeInteraction": null,
     "interactionOpen": false,
     "showResults": false,
     "timerEndsAt": null,
-    "responses": {},
-    "participants": {
-      "71512e5f-3a24-454d-a0a5-e5d63709d748": 1790246824481,
-      "anon-mp082562d": 1790240802557,
-      "anon-615yyh4l4rs": 1790241376547
+    "responses": {
+      "frequency": {
+        "demo-1": "rarely",
+        "demo-2": "daily1",
+        "demo-3": "daily1",
+        "demo-4": "daily5",
+        "demo-5": "daily5",
+        "demo-6": "daily5",
+        "demo-7": "daily10",
+        "demo-8": "rarely",
+        "demo-9": "daily1",
+        "demo-10": "daily1",
+        "demo-11": "daily5",
+        "demo-12": "daily5",
+        "demo-13": "daily5",
+        "demo-14": "daily10",
+        "demo-15": "rarely",
+        "demo-16": "daily1",
+        "demo-17": "daily1",
+        "demo-18": "daily5",
+        "demo-19": "daily5",
+        "demo-20": "daily5",
+        "demo-21": "daily10",
+        "demo-22": "rarely",
+        "demo-23": "daily1",
+        "demo-24": "daily1",
+        "demo-25": "daily5",
+        "demo-26": "daily5",
+        "demo-27": "daily5",
+        "demo-28": "daily10"
+      },
+      "timeSaved": {
+        "demo-1": "min10",
+        "demo-2": "min30",
+        "demo-3": "min30",
+        "demo-4": "hour1",
+        "demo-5": "hour1",
+        "demo-6": "hours",
+        "demo-7": "min30",
+        "demo-8": "min10",
+        "demo-9": "min30",
+        "demo-10": "min30",
+        "demo-11": "hour1",
+        "demo-12": "hour1",
+        "demo-13": "hours",
+        "demo-14": "min30",
+        "demo-15": "min10",
+        "demo-16": "min30",
+        "demo-17": "min30",
+        "demo-18": "hour1",
+        "demo-19": "hour1",
+        "demo-20": "hours",
+        "demo-21": "min30",
+        "demo-22": "min10",
+        "demo-23": "min30",
+        "demo-24": "min30",
+        "demo-25": "hour1",
+        "demo-26": "hour1",
+        "demo-27": "hours",
+        "demo-28": "min30"
+      },
+      "appetite": {
+        "demo-1": "no",
+        "demo-2": "some",
+        "demo-3": "some",
+        "demo-4": "more",
+        "demo-5": "more",
+        "demo-6": "allin",
+        "demo-7": "allin",
+        "demo-8": "no",
+        "demo-9": "some",
+        "demo-10": "some",
+        "demo-11": "more",
+        "demo-12": "more",
+        "demo-13": "allin",
+        "demo-14": "allin",
+        "demo-15": "no",
+        "demo-16": "some",
+        "demo-17": "some",
+        "demo-18": "more",
+        "demo-19": "more",
+        "demo-20": "allin",
+        "demo-21": "allin",
+        "demo-22": "no",
+        "demo-23": "some",
+        "demo-24": "some",
+        "demo-25": "more",
+        "demo-26": "more",
+        "demo-27": "allin",
+        "demo-28": "allin"
+      },
+      "priorities": {
+        "demo-1": [
+          "meetings",
+          "emails",
+          "prep"
+        ],
+        "demo-2": [
+          "excel",
+          "repetitive"
+        ],
+        "demo-3": [
+          "docs",
+          "research"
+        ],
+        "demo-4": [
+          "meetings",
+          "slides"
+        ],
+        "demo-5": [
+          "emails",
+          "repetitive"
+        ],
+        "demo-6": [
+          "excel",
+          "docs",
+          "research"
+        ],
+        "demo-7": [
+          "meetings",
+          "prep",
+          "repetitive"
+        ],
+        "demo-8": [
+          "meetings",
+          "emails",
+          "prep"
+        ],
+        "demo-9": [
+          "excel",
+          "repetitive"
+        ],
+        "demo-10": [
+          "docs",
+          "research"
+        ],
+        "demo-11": [
+          "meetings",
+          "slides"
+        ],
+        "demo-12": [
+          "emails",
+          "repetitive"
+        ],
+        "demo-13": [
+          "excel",
+          "docs",
+          "research"
+        ],
+        "demo-14": [
+          "meetings",
+          "prep",
+          "repetitive"
+        ],
+        "demo-15": [
+          "meetings",
+          "emails",
+          "prep"
+        ],
+        "demo-16": [
+          "excel",
+          "repetitive"
+        ],
+        "demo-17": [
+          "docs",
+          "research"
+        ],
+        "demo-18": [
+          "meetings",
+          "slides"
+        ],
+        "demo-19": [
+          "emails",
+          "repetitive"
+        ],
+        "demo-20": [
+          "excel",
+          "docs",
+          "research"
+        ],
+        "demo-21": [
+          "meetings",
+          "prep",
+          "repetitive"
+        ],
+        "demo-22": [
+          "meetings",
+          "emails",
+          "prep"
+        ],
+        "demo-23": [
+          "excel",
+          "repetitive"
+        ],
+        "demo-24": [
+          "docs",
+          "research"
+        ],
+        "demo-25": [
+          "meetings",
+          "slides"
+        ],
+        "demo-26": [
+          "emails",
+          "repetitive"
+        ],
+        "demo-27": [
+          "excel",
+          "docs",
+          "research"
+        ],
+        "demo-28": [
+          "meetings",
+          "prep",
+          "repetitive"
+        ]
+      },
+      "quizPrompt": {
+        "demo-1": "long",
+        "demo-2": "context",
+        "demo-3": "context",
+        "demo-4": "context",
+        "demo-5": "context",
+        "demo-6": "long",
+        "demo-7": "context",
+        "demo-8": "context",
+        "demo-9": "context",
+        "demo-10": "context",
+        "demo-11": "long",
+        "demo-12": "context",
+        "demo-13": "context",
+        "demo-14": "context",
+        "demo-15": "context",
+        "demo-16": "long",
+        "demo-17": "context",
+        "demo-18": "context",
+        "demo-19": "context",
+        "demo-20": "context",
+        "demo-21": "long",
+        "demo-22": "context"
+      },
+      "quizAgent": {
+        "demo-1": "simple",
+        "demo-2": "steps",
+        "demo-3": "steps",
+        "demo-4": "steps",
+        "demo-5": "steps",
+        "demo-6": "steps",
+        "demo-7": "simple",
+        "demo-8": "steps",
+        "demo-9": "steps",
+        "demo-10": "steps",
+        "demo-11": "steps",
+        "demo-12": "steps",
+        "demo-13": "simple",
+        "demo-14": "steps",
+        "demo-15": "steps",
+        "demo-16": "steps",
+        "demo-17": "steps",
+        "demo-18": "steps",
+        "demo-19": "simple",
+        "demo-20": "steps"
+      },
+      "finalTest": {
+        "demo-1": "prompts",
+        "demo-2": "assistant",
+        "demo-3": "agents",
+        "demo-4": "meetings",
+        "demo-5": "business",
+        "demo-6": "sites",
+        "demo-7": "prompts",
+        "demo-8": "assistant",
+        "demo-9": "agents",
+        "demo-10": "meetings",
+        "demo-11": "business",
+        "demo-12": "sites",
+        "demo-13": "prompts",
+        "demo-14": "assistant",
+        "demo-15": "agents",
+        "demo-16": "meetings",
+        "demo-17": "business",
+        "demo-18": "sites",
+        "demo-19": "prompts",
+        "demo-20": "assistant",
+        "demo-21": "agents",
+        "demo-22": "meetings",
+        "demo-23": "business",
+        "demo-24": "sites"
+      }
     },
-    "ideas": [],
-    "shortlistedIdeaIds": [],
-    "ideaVotes": {},
-    "demoLoaded": false
-  },
-  "AI-2026-09-3DED": {
-    "id": "AI-2026-09-3DED",
-    "presenterKey": "d4e1da420fa3c9fd",
-    "createdAt": "2026-09-24T09:05:30.345Z",
-    "updatedAt": "2026-09-24T10:44:28.046Z",
-    "slideIndex": 0,
-    "activeInteraction": null,
-    "interactionOpen": false,
-    "showResults": false,
-    "timerEndsAt": null,
-    "responses": {},
     "participants": {
-      "c3c97e56-2a21-469d-9046-4a68e38966ac": 1790246668046
+      "demo-1": 1790252459701,
+      "demo-2": 1790252458701,
+      "demo-3": 1790252457701,
+      "demo-4": 1790252456701,
+      "demo-5": 1790252455701,
+      "demo-6": 1790252454701,
+      "demo-7": 1790252453701,
+      "demo-8": 1790252452701,
+      "demo-9": 1790252451701,
+      "demo-10": 1790252450701,
+      "demo-11": 1790252449701,
+      "demo-12": 1790252448701,
+      "demo-13": 1790252447701,
+      "demo-14": 1790252446701,
+      "demo-15": 1790252445701,
+      "demo-16": 1790252444701,
+      "demo-17": 1790252443701,
+      "demo-18": 1790252442701,
+      "demo-19": 1790252441701,
+      "demo-20": 1790252440701,
+      "demo-21": 1790252439701,
+      "demo-22": 1790252438701,
+      "demo-23": 1790252437701,
+      "demo-24": 1790252436701,
+      "demo-25": 1790252435701,
+      "demo-26": 1790252434701,
+      "demo-27": 1790252433701,
+      "demo-28": 1790252432701
     },
-    "ideas": [],
-    "shortlistedIdeaIds": [],
-    "ideaVotes": {},
-    "demoLoaded": false
+    "ideas": [
+      {
+        "id": "demo-idea-1",
+        "text": "Préparer automatiquement un compte-rendu avec actions après chaque réunion.",
+        "createdAt": "2026-09-24T12:20:59.700Z",
+        "demo": true
+      },
+      {
+        "id": "demo-idea-2",
+        "text": "Générer un briefing client avant les rendez-vous.",
+        "createdAt": "2026-09-24T12:20:59.701Z",
+        "demo": true
+      },
+      {
+        "id": "demo-idea-3",
+        "text": "Mettre à jour le reporting Excel à partir des données hebdomadaires.",
+        "createdAt": "2026-09-24T12:20:59.701Z",
+        "demo": true
+      },
+      {
+        "id": "demo-idea-4",
+        "text": "Trier les emails et proposer des brouillons de réponse.",
+        "createdAt": "2026-09-24T12:20:59.701Z",
+        "demo": true
+      },
+      {
+        "id": "demo-idea-5",
+        "text": "Chercher rapidement dans nos procédures internes.",
+        "createdAt": "2026-09-24T12:20:59.701Z",
+        "demo": true
+      },
+      {
+        "id": "demo-idea-6",
+        "text": "Créer une première version des présentations commerciales.",
+        "createdAt": "2026-09-24T12:20:59.701Z",
+        "demo": true
+      },
+      {
+        "id": "demo-idea-7",
+        "text": "Analyser les contrats et faire ressortir les points de vigilance.",
+        "createdAt": "2026-09-24T12:20:59.701Z",
+        "demo": true
+      },
+      {
+        "id": "demo-idea-8",
+        "text": "Transformer les notes de réunion en tâches assignées.",
+        "createdAt": "2026-09-24T12:20:59.701Z",
+        "demo": true
+      }
+    ],
+    "shortlistedIdeaIds": [
+      "demo-idea-1",
+      "demo-idea-2",
+      "demo-idea-3",
+      "demo-idea-4",
+      "demo-idea-5",
+      "demo-idea-6"
+    ],
+    "ideaVotes": {
+      "demo-1": {
+        "demo-idea-1": 2,
+        "demo-idea-2": 1
+      },
+      "demo-2": {
+        "demo-idea-3": 2,
+        "demo-idea-1": 1
+      },
+      "demo-3": {
+        "demo-idea-4": 1,
+        "demo-idea-2": 2
+      },
+      "demo-4": {
+        "demo-idea-5": 1,
+        "demo-idea-1": 2
+      },
+      "demo-5": {
+        "demo-idea-3": 1,
+        "demo-idea-6": 2
+      }
+    },
+    "demoLoaded": true
   }
 }

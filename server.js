@@ -24,6 +24,16 @@ const interactionDefinitions = {
       ['daily10', 'Plus de 10 fois par jour']
     ]
   },
+  timeSaved: {
+    type: 'single',
+    question: "Combien de temps avez-vous l’impression que l’IA vous fait gagner chaque jour ?",
+    options: [
+      ['min10', 'Environ 10 min / jour'],
+      ['min30', 'Environ 30 min / jour'],
+      ['hour1', 'Environ 1 h / jour'],
+      ['hours', 'Plusieurs heures / jour']
+    ]
+  },
   appetite: {
     type: 'single',
     question: "J’aimerais automatiser davantage certaines tâches avec l’IA.",
@@ -184,6 +194,7 @@ function aggregateInteraction(session, id) {
 
 function dashboard(session) {
   const f = aggregateInteraction(session, 'frequency');
+  const t = aggregateInteraction(session, 'timeSaved');
   const a = aggregateInteraction(session, 'appetite');
   const p = aggregateInteraction(session, 'priorities');
   const daily = f.total ? Math.round(((f.counts.daily1 + f.counts.daily5 + f.counts.daily10) / f.total) * 100) : 0;
@@ -191,9 +202,12 @@ function dashboard(session) {
   const appetiteScore = a.total ? Math.round(((a.counts.some * 33 + a.counts.more * 67 + a.counts.allin * 100) / a.total)) : 0;
   const freqScore = f.total ? Math.round(((f.counts.daily1 * 35 + f.counts.daily5 * 70 + f.counts.daily10 * 100) / f.total)) : 0;
   const maturity = Math.round(freqScore * 0.6 + appetiteScore * 0.4);
+  const savedMinutes = t.total ? Math.round((t.counts.min10 * 10 + t.counts.min30 * 30 + t.counts.hour1 * 60 + t.counts.hours * 120) / t.total) : 0;
+  const avgMinutesSavedLabel = savedMinutes >= 60 ? `${(savedMinutes/60).toFixed(savedMinutes%60?1:0).replace('.',',')} h` : `${savedMinutes} min`;
+  const annualHoursSaved = Math.round(savedMinutes * 220 / 60);
   const labels = Object.fromEntries((interactionDefinitions.priorities.options || []).map(([k, v]) => [k, v]));
   const top = Object.entries(p.counts).sort((x,y) => y[1] - x[1]).slice(0,3).map(([id, count]) => ({ id, label: labels[id], count }));
-  return { daily, wantsAuto, appetiteScore, freqScore, maturity, top };
+  return { daily, wantsAuto, appetiteScore, freqScore, maturity, top, savedMinutes, avgMinutesSavedLabel, annualHoursSaved };
 }
 
 function publicState(session, presenter = false) {
@@ -293,6 +307,7 @@ function serveStatic(req, res, pathname) {
 function makeDemoResponses() {
   const ids = Array.from({length: 28}, (_,i) => `demo-${i+1}`);
   const frequencyVals = ['rarely','daily1','daily1','daily5','daily5','daily5','daily10'];
+  const timeSavedVals = ['min10','min30','min30','hour1','hour1','hours','min30'];
   const appetiteVals = ['no','some','some','more','more','allin','allin'];
   const priorityVals = [
     ['meetings','emails','prep'], ['excel','repetitive'], ['docs','research'], ['meetings','slides'],
@@ -300,6 +315,7 @@ function makeDemoResponses() {
   ];
   return {
     frequency: Object.fromEntries(ids.map((id,i) => [id, frequencyVals[i % frequencyVals.length]])),
+    timeSaved: Object.fromEntries(ids.map((id,i) => [id, timeSavedVals[i % timeSavedVals.length]])),
     appetite: Object.fromEntries(ids.map((id,i) => [id, appetiteVals[i % appetiteVals.length]])),
     priorities: Object.fromEntries(ids.map((id,i) => [id, priorityVals[i % priorityVals.length]])),
     quizPrompt: Object.fromEntries(ids.slice(0,22).map((id,i) => [id, i % 5 === 0 ? 'long' : 'context'])),

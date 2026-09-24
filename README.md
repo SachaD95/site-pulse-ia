@@ -95,3 +95,9 @@ ai-pulse-site/
     ├── styles.css
     └── app.js
 ```
+
+# Research benchmarks added to dashboard
+- Microsoft & LinkedIn Work Trend Index, 8 May 2024: power users report saving more than 30 minutes/day.
+- NBER Working Paper 33795, May 2025, revised Nov 2025: among active treated users, two fewer hours/week on email across 7,137 knowledge workers in 66 firms.
+- Harvard Business School / BCG, Sept 2023: 758 consultants completed in-frontier tasks more than 25% faster with GPT-4.
+- McKinsey, June 2023 / Sept 2024: estimated 3-5% sales productivity potential; later B2B sales work emphasizes shifting time from back-office activities toward customer-facing work.

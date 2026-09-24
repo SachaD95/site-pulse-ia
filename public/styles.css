@@ -239,3 +239,31 @@ body { overflow-x: hidden; }
   .role-gate { padding:28px; }
   .participant-shell { padding-left:12px; padding-right:12px; }
 }
+
+/* Dashboard enrichi : temps gagné + benchmark recherche */
+.dashboard-rich { grid-template-columns: 1fr 1.18fr 1fr; gap:12px; margin-top:16px; }
+.dashboard-rich .kpi { min-height:0; padding:16px 18px; }
+.dashboard-rich .kpi > strong { font-size:36px; }
+.mini-dist { display:flex; flex-direction:column; gap:6px; margin-top:12px; }
+.mini-dist > div { display:grid; grid-template-columns:minmax(110px,1fr) 1.2fr 38px; gap:7px; align-items:center; font-size:10px; }
+.mini-dist span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.mini-dist b { text-align:right; color:#eaf6ff; font-size:10px; }
+.mini-bar, .gauge-line { height:6px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; }
+.mini-bar i, .gauge-line i { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--cyan),var(--blue)); }
+.gauge-line { margin:15px 0 7px; height:9px; }
+.focus-time { border-color:rgba(61,221,255,.45); box-shadow:0 0 34px rgba(61,221,255,.08); }
+.focus-head { display:flex; gap:9px; align-items:center; margin-bottom:6px; }
+.focus-head div { display:flex; flex-direction:column; gap:1px; }
+.focus-head b { font-size:10px; letter-spacing:.13em; color:var(--cyan); }
+.focus-head small { color:var(--muted); font-size:10px; }
+.focus-icon { width:28px; height:28px; border:1px solid rgba(61,221,255,.4); border-radius:50%; display:grid!important; place-items:center; color:var(--cyan)!important; font-size:20px; }
+.annualized { margin-top:10px; border-top:1px solid var(--line); padding-top:8px; color:#b8eefe; font-weight:700; font-size:12px; }
+.research-card { grid-column:span 2; }
+.research-card h3 { font-size:16px; margin:5px 0 10px; max-width:none; }
+.research-facts { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.research-facts p { margin:0; padding:10px; border:1px solid var(--line); border-radius:12px; color:#d8e8f6; font-size:10px; line-height:1.38; background:rgba(255,255,255,.025); }
+.research-facts b { display:block; font-size:17px; color:white; margin-bottom:3px; }
+.research-facts em { display:block; color:var(--muted); margin-top:4px; font-style:normal; }
+.role-bench p { font-size:10.5px; line-height:1.4; margin:5px 0 8px; color:#d8e8f6; }
+.role-bench small { display:block; border-top:1px solid var(--line); padding-top:7px; color:var(--muted); font-size:8.5px; line-height:1.3; }
+@media (max-width: 900px){ .dashboard-rich{grid-template-columns:1fr}.research-card{grid-column:span 1}.research-facts{grid-template-columns:1fr} }
