@@ -16,13 +16,13 @@ let voteAllocation = {};
 let anonId = null;
 
 const slideInteraction = {
-  2:'frequency', 3:'timeSaved', 4:'appetite', 5:'priorities', 9:'retrievalCheck', 14:'nextPriority'
+  2:'frequency', 3:'timeSaved', 4:'appetite', 5:'priorities', 9:'retrievalCheck', 12:'nextPriority'
 };
 
 const slideTitles = [
   'Introduction', 'Pourquoi sommes-nous ici ?', 'Fréquence d’usage', 'Temps gagné', 'Appétit pour l’automatisation', 'Priorités d’automatisation',
   'Dashboard collectif', 'Loupe · temps gagné', 'Comment fonctionne l’IA ?', 'L’IA verra-t-elle l’info ?', 'Prompt Lab avancé',
-  'Quel outil IA pour quel besoin ?', 'Agents', 'Meeting Notes', 'Prochaines priorités', 'Conclusion', 'Le document source'
+  'Quel outil IA pour quel besoin ?', 'Prochaines priorités', 'Conclusion', 'Le document source'
 ];
 
 function getAnonId(sid){
@@ -250,7 +250,7 @@ function startTimerLoop(){
 }
 
 function renderSlide(i){
-  const renderers=[slideIntro,slideObjectives,()=>slidePoll('frequency'),()=>slidePoll('timeSaved'),()=>slidePoll('appetite'),()=>slidePoll('priorities'),slideDashboard,slideTimeFocus,slideHowAI,slideRetrievalDemo,slidePromptLab,slideToolLandscape,slideAgents,slideMeeting,slideNextPriorities,slideFinal,slideSourceDocument];
+  const renderers=[slideIntro,slideObjectives,()=>slidePoll('frequency'),()=>slidePoll('timeSaved'),()=>slidePoll('appetite'),()=>slidePoll('priorities'),slideDashboard,slideTimeFocus,slideHowAI,slideRetrievalDemo,slidePromptLab,slideToolLandscape,slideNextPriorities,slideFinal,slideSourceDocument];
   return renderers[i]?.() || '';
 }
 
@@ -259,11 +259,11 @@ function brandMark(){
 }
 
 function slideIntro(){
-  return `<article class="slide brand-slide intro-v5"><div class="brand-top">${brandMark()}</div><div class="hero-grid hero-grid-v5"><div><div class="eyebrow">Petit dej IA · AI Pulse</div><h1>Removall & IA :<br><span>Pour avancer dans l'avenir</span></h1><p class="big-sub">Une expérience interactive pour mesurer, comprendre et choisir où l’IA peut réellement nous aider.</p><button class="btn primary" data-goto="1">Commencer →</button></div><div class="qr-card light-card"><div class="qr-box" id="qrcode"></div><strong>Scannez pour rejoindre</strong><small>Session ${esc(sessionId)}</small></div></div></article>`;
+  return `<article class="slide brand-slide intro-v6"><div class="brand-top">${brandMark()}</div><div class="hero-grid hero-grid-v5"><div><div class="eyebrow">Petit dej IA · AI Pulse</div><h1>Removall & IA :<br><span>Pour avancer dans l'avenir</span></h1><p class="big-sub">Mesurer. Comprendre. Choisir.</p><button class="btn primary" data-goto="1">Commencer →</button></div><div class="qr-card light-card"><div class="qr-box" id="qrcode"></div><strong>Rejoindre la session</strong><small>${esc(sessionId)}</small><div class="hero-mini-tags"><span>Live</span><span>Sondage</span><span>IA</span></div></div></div></article>`;
 }
 function slideObjectives(){
-  const cards=[['01','Prendre le pouls','Comprendre comment l’équipe utilise déjà l’IA.'],['02','Apprendre','Découvrir les bonnes pratiques et les nouvelles possibilités.'],['03','Imaginer','Identifier ensemble les automatisations les plus intéressantes.']];
-  return `<article class="slide"><div class="eyebrow">Pourquoi sommes-nous ici ?</div><h2>Trois objectifs, une session très concrète.</h2><div class="objective-grid">${cards.map((c,i)=>`<div class="feature-card objective-${i+1}"><div class="num">${c[0]}</div><h3>${c[1]}</h3><p>${c[2]}</p></div>`).join('')}</div></article>`;
+  const cards=[['⚡','Prendre le pouls','Usage actuel de l’IA.'],['🧠','Apprendre','Bonnes pratiques & repères.'],['🎯','Choisir','Priorités pour la suite.']];
+  return `<article class="slide"><div class="eyebrow">Pourquoi sommes-nous ici ?</div><h2>Trois objectifs.</h2><div class="objective-grid objective-grid-v6">${cards.map((c,i)=>`<div class="feature-card objective-${i+1}"><div class="mini-illustration">${c[0]}</div><h3>${c[1]}</h3><p>${c[2]}</p></div>`).join('')}</div></article>`;
 }
 
 function appetiteDonut(agg,compact=false){
@@ -298,7 +298,7 @@ function slidePoll(id){
   let results='';
   if(id==='appetite' && show) results=appetiteDonut(agg);
   else if(show) results=renderBars(def,agg,id==='priorities');
-  else results=`<div class="placeholder-results"><div><strong>${active&&state.interactionOpen?'Le vote est ouvert':'Prêt à lancer'}</strong><p>${active&&state.interactionOpen?'Les résultats restent masqués jusqu’à votre signal.':'Ouvrez l’interaction depuis les contrôles présentateur.'}</p></div></div>`;
+  else results=`<div class="placeholder-results"><div><strong>${active&&state.interactionOpen?'Le vote est ouvert':'Prêt à lancer'}</strong><p>${active&&state.interactionOpen?'Les résultats restent masqués jusqu’à votre signal.':'En attente des réponses.'}</p></div></div>`;
   return `<article class="slide"><div class="poll-shell"><div><div class="live-badge"><i></i>${active&&state.interactionOpen?'LIVE · vote ouvert':'Interaction'}</div><div class="eyebrow" style="margin-top:18px">${label}</div><h2 class="poll-title">${esc(def.question)}</h2><div class="response-count">${agg.total} réponse${agg.total>1?'s':''} · <span data-participants>${state.participantCount}</span> connecté${state.participantCount>1?'s':''}</div>${renderPollOptionPreview(def,id)}</div><div>${results}</div></div></article>`;
 }
 
@@ -315,45 +315,46 @@ function miniDistribution(def, agg){
 
 function slideDashboard(){
   const d=state.dashboard, f=state.aggregates.frequency||{total:0,counts:{}}, t=state.aggregates.timeSaved||{total:0,counts:{}}, a=state.aggregates.appetite||{total:0,counts:{}};
-  return `<article class="slide dashboard-slide"><div class="eyebrow">Synthèse live · vos réponses</div><h2>Voilà où nous en sommes.</h2><div class="dashboard-grid dashboard-v3">
-    <div class="kpi"><span class="kpi-label">Usage quotidien</span><strong>${d.daily}%</strong><span>utilisent l’IA au moins quotidiennement</span>${miniDistribution(definitions.frequency,f)}</div>
-    <button class="kpi focus-time zoom-card" data-goto="7"><div class="focus-head"><span class="focus-icon">⌕</span><div><b>LOUPE · TEMPS GAGNÉ</b><small>cliquer pour ouvrir l’analyse</small></div></div><strong>${d.avgMinutesSavedLabel}</strong><span>par jour en moyenne, d’après la salle</span>${miniDistribution(definitions.timeSaved,t)}<div class="annualized">≈ ${d.annualHoursSaved} h / personne / an*</div></button>
+  return `<article class="slide dashboard-slide"><div class="eyebrow">Synthèse live</div><h2>Voilà où nous en sommes.</h2><div class="dashboard-grid dashboard-v3">
+    <div class="kpi"><span class="kpi-label">Usage quotidien</span><strong>${d.daily}%</strong><span>au moins 1 fois / jour</span>${miniDistribution(definitions.frequency,f)}</div>
+    <button class="kpi focus-time zoom-card" data-goto="7"><div class="focus-head"><span class="focus-icon">⌕</span><div><b>TEMPS GAGNÉ</b><small>Analyse détaillée</small></div></div><strong>${d.avgMinutesSavedLabel}</strong><span>par jour</span>${miniDistribution(definitions.timeSaved,t)}<div class="annualized">≈ ${d.annualHoursSaved} h / an</div></button>
     <div class="kpi appetite-card"><span class="kpi-label">Appétit pour l’automatisation</span>${appetiteDonut(a,true)}</div>
     <div class="kpi top-list"><span class="kpi-label">Top 3 à automatiser</span>${d.top.length?d.top.map(x=>`<div class="rank-item no-rank"><span class="rank-dot"></span><span class="rank-label">${esc(x.label)}</span><b>${x.count}</b></div>`).join(''):'<span>En attente de réponses.</span>'}</div>
-    <div class="kpi maturity-v3"><span class="kpi-label">Maturité IA de l’équipe</span><div class="maturity-score"><strong>${d.maturity}</strong><span>/100</span></div><div class="maturity-track"><i style="width:${d.maturity}%"></i></div><small>Indice combinant fréquence d’usage et appétit d’automatisation.</small></div>
-  </div><small class="footnote">*Projection interne : moyenne pondérée de la question « temps gagné » × 220 jours ouvrés ; « plusieurs heures » est compté à 2 h/jour.</small></article>`;
+    <div class="kpi maturity-v3"><span class="kpi-label">Maturité IA</span><div class="maturity-score"><strong>${d.maturity}</strong><span>/100</span></div><div class="maturity-track"><i style="width:${d.maturity}%"></i></div><small>Indice interne de l’atelier.</small></div>
+  </div><small class="footnote">Projection interne : 220 jours ouvrés ; « plusieurs heures » = 2 h / jour.</small></article>`;
 }
 
 function slideTimeFocus(){
   const d=state.dashboard, t=state.aggregates.timeSaved||{total:0,counts:{}};
   const studies=[
-    ['POWER USERS','> 30 min / jour','Microsoft & LinkedIn','Work Trend Index · 8 mai 2024','31 000 personnes · 31 pays'],
-    ['COPILOT','≈ 14 min / jour','Microsoft WorkLab','Premiers utilisateurs · 2023','Commerciaux Microsoft : ≈ 90 min / semaine déclarées'],
-    ['E-MAIL','≈ 2 h / semaine','NBER','7 137 knowledge workers · 66 entreprises','Temps passé sur les e-mails chez les utilisateurs actifs'],
-    ['VENTE','+3 à +5 %','McKinsey','Potentiel de productivité · 2023','Estimation économique, pas un nombre universel de minutes']
+    ['POWER USERS','> 30 min / jour','Microsoft & LinkedIn','Work Trend Index · 2024','31 000 personnes · 31 pays'],
+    ['COPILOT','≈ 14 min / jour','Microsoft WorkLab','Premiers utilisateurs · 2023','Commerciaux : ≈ 90 min / semaine'],
+    ['E-MAIL','≈ 2 h / semaine','NBER','7 137 knowledge workers · 66 entreprises','Temps en moins sur les e-mails'],
+    ['VENTE','+3 à +5 %','McKinsey','Potentiel · 2023','Estimation économique']
   ];
-  return `<article class="slide time-focus-slide"><div class="eyebrow">Loupe · temps gagné</div><h2>Votre perception, puis les repères de la recherche.</h2><div class="focus-v5"><div class="focus-panel live-focus"><span class="panel-label">Dans cette salle · live</span><div class="focus-number">${d.avgMinutesSavedLabel}<small>/ jour</small></div>${miniDistribution(definitions.timeSaved,t)}<div class="annualized big">≈ ${d.annualHoursSaved} h / personne / an*</div></div><div class="research-visual-grid">${studies.map((s,i)=>`<div class="research-visual-card study-${i+1}"><span class="study-tag">${s[0]}</span><strong>${s[1]}</strong><b>${s[2]}</b><p>${s[3]}</p><small>${s[4]}</small></div>`).join('')}</div></div><div class="truth-band truth-v5"><strong>À retenir</strong><span>Il n’existe pas un nombre universel de minutes gagnées. Le résultat dépend de la tâche, de l’outil, du métier, du niveau d’adoption et du workflow. <b>C’est pour cela qu’il faut en avoir un usage intelligent.</b></span></div><small class="footnote">*Projection interne : moyenne pondérée × 220 jours ouvrés ; « plusieurs heures » est compté à 2 h/jour.</small></article>`;
+  return `<article class="slide time-focus-slide"><div class="eyebrow">Loupe · temps gagné</div><h2>Perception de la salle + repères externes.</h2><div class="focus-v5"><div class="focus-panel live-focus"><span class="panel-label">Dans cette salle</span><div class="focus-number">${d.avgMinutesSavedLabel}<small>/ jour</small></div>${miniDistribution(definitions.timeSaved,t)}<div class="annualized big">≈ ${d.annualHoursSaved} h / personne / an</div></div><div class="research-visual-grid">${studies.map((s,i)=>`<div class="research-visual-card study-${i+1}"><span class="study-tag">${s[0]}</span><strong>${s[1]}</strong><b>${s[2]}</b><p>${s[3]}</p><small>${s[4]}</small></div>`).join('')}</div></div><div class="truth-band truth-v5"><strong>À retenir</strong><span>Pas de chiffre universel : le gain dépend de la tâche, de l’outil et du workflow.</span></div></article>`;
 }
 
 const aiFlowItems={
-  you:['Vous','Vous formulez le besoin : la question, le contexte métier et ce que vous attendez réellement.'],
-  prompt:['Prompt','Le prompt traduit votre intention en consigne. Plus il est clair, plus vous réduisez l’ambiguïté.'],
-  context:['Contexte / documents','Le modèle répond à partir de ce qu’il reçoit effectivement dans son contexte : votre demande, les extraits transmis et les documents disponibles à ce moment-là.'],
-  model:['Modèle IA','Le modèle transforme ce contexte en une réponse probable. C’est ici que se trouve le réseau de neurones entraîné par machine learning.'],
-  result:['Résultat','Le modèle produit une réponse qui semble cohérente avec votre demande. Cohérente ne veut pas dire automatiquement vraie, complète ou à jour.'],
-  verify:['Vérification','Pour une information métier importante, on revient à la source : chiffres, dates, citations, règles, engagements et décisions.']
+  you:['Vous','Vous posez le besoin métier.'],
+  prompt:['Prompt','La consigne cadre la réponse.'],
+  context:['Contexte / documents','Le modèle ne voit que ce qui lui est transmis.'],
+  model:['Modèle IA','Le modèle produit la réponse la plus probable.'],
+  result:['Résultat','La réponse peut être utile sans être parfaitement exacte.'],
+  verify:['Vérification','Les points critiques doivent être contrôlés.']
 };
 function slideHowAI(){
-  const keys=Object.keys(aiFlowItems), activeKey=component.flow, active=aiFlowItems[activeKey]||aiFlowItems.context;
-  const modelDetail=activeKey==='model' ? `<div class="model-deep-dive"><div class="model-arrow">↳</div><div class="model-blackbox"><span>MODÈLE IA</span><strong>Une « boîte noire » à vérifier</strong><p>Beaucoup de modèles privés sont utilisés comme des boîtes noires : on connaît l’entrée et la sortie, mais pas le raisonnement interne exact qui a produit chaque réponse.</p></div><div class="ml-card"><span>MACHINE LEARNING</span><strong>Il ne « trouve » pas une solution comme un humain.</strong><p>Un réseau de neurones a appris des régularités à partir d’énormes volumes d’exemples. Il génère ensuite la réponse qui a statistiquement le plus de chances de correspondre à votre demande et à son contexte.</p></div></div>` : '';
-  return `<article class="slide ai-v5"><div class="eyebrow">Comment fonctionne l’IA ?</div><h2>De votre demande à une réponse… puis à sa vérification.</h2><div class="flow flow-v5">${keys.map((k,i)=>`${i?'<span class="flow-arrow">→</span>':''}<button class="flow-node ${activeKey===k?'active':''}" data-flow="${k}">${aiFlowItems[k][0]}</button>`).join('')}</div><div class="ai-v5-detail"><div><span class="panel-label">${active[0]}</span><h3>${active[1]}</h3></div><div class="verify-reminder"><b>${activeKey==='verify'?'Le dernier mot reste humain.':'Cliquez sur les étapes pour comprendre le chemin.'}</b><span>${activeKey==='model'?'Le modèle peut être puissant sans être explicable au niveau de chaque réponse.':'Une bonne réponse dépend autant du contexte transmis que du modèle utilisé.'}</span></div></div>${modelDetail}<div class="ai-bottom-rule"><span>Entrée</span><i></i><b>Réponse probabiliste</b><i></i><span>Contrôle humain</span></div></article>`;
+  const activeKey=component.flow, active=aiFlowItems[activeKey]||aiFlowItems.context;
+  const modelDetail=activeKey==='model' ? `<div class="model-deep-dive"><div class="model-blackbox"><span>BOÎTE NOIRE</span><strong>Entrée claire. Sortie visible.</strong><p>Le détail du raisonnement interne n’est pas toujours explicable.</p></div><div class="ml-card"><span>MACHINE LEARNING</span><strong>Apprentissage par exemples.</strong><p>Le modèle apprend des régularités statistiques puis génère la réponse la plus probable.</p></div></div>` : '';
+  const conciseTips = activeKey==='context' ? '<div class="flow-mini-points"><span>Mots-clés</span><span>Vectorisation</span><span>Recherche hybride</span><span>Reranking</span></div>' : activeKey==='verify' ? '<div class="flow-mini-points"><span>Source</span><span>Chiffres</span><span>Dates</span><span>Décisions</span></div>' : '';
+  return `<article class="slide ai-v6"><div class="eyebrow">Comment fonctionne l’IA ?</div><h2>Dans un cas documentaire.</h2><div class="flow flow-v5">${Object.keys(aiFlowItems).map((k,i)=>`${i?'<span class="flow-arrow">→</span>':''}<button class="flow-node ${component.flow===k?'active':''}" data-flow="${k}">${aiFlowItems[k][0]}</button>`).join('')}</div><div class="ai-explain compact-ai"><div class="ai-main-card"><span class="panel-label">${active[0]}</span><p>${active[1]}</p>${conciseTips}${modelDetail}</div><div class="ai-side-card"><span class="panel-label">À retenir</span><p>Plausible ne veut pas dire vrai. Plus l’enjeu est fort, plus il faut vérifier.</p></div></div></article>`;
 }
 
 function slideRetrievalDemo(){
   const id='retrievalCheck', def=definitions[id], agg=state.aggregates[id]||{total:0,counts:{}}, active=state.activeInteraction===id, show=active&&state.showResults;
   const total=agg.total||1, yes=pct(agg.counts.yes||0,total), no=pct(agg.counts.no||0,total);
   const donut=`<div class="mini-donut" style="background:conic-gradient(#F5B297 0 ${yes}%,#4BBA84 ${yes}% 100%)"><div><b>${agg.total}</b><span>réponses</span></div></div><div class="retrieval-legend"><span><i style="background:#F5B297"></i>Oui ${yes}%</span><span><i style="background:#4BBA84"></i>Non ${no}%</span></div>`;
-  return `<article class="slide retrieval-demo carbon-demo"><div class="eyebrow">Démonstration documentaire</div><h2>Est-ce que l’IA va forcément voir cette information ?</h2><div class="doc-quiz-grid"><div class="fake-doc carbon-doc"><div class="doc-head"><b>CARBON CREDIT PROJECT · MONITORING REPORT V6</b><span>84 pages</span></div><div class="doc-meta"><span>Project ID · CK-2047</span><span>Period · 2025</span><span>Methodology · Cookstove</span></div><h3>5. Monitoring parameters and issuance calculation</h3><p>Emission reductions are calculated from monitored stove distribution, usage rates, fuel consumption and the approved baseline scenario. The project team reconciles field records with the monitoring database before issuance.</p><p class="doc-line">5.4 Data quality controls — sampling checks are performed quarterly and deviations above the internal threshold require investigation.</p><div class="muted-section carbon-annex"><h4>Annex 12 · Local implementation notes</h4><p>Field logistics, enumerator notes, replacement records and exceptional operating conditions.</p><p class="doc-line faint">12.7 Temporary deviations — villages with incomplete monitoring evidence remain visible in the operational dataset pending review.</p><div class="hidden-fact"><span>Information critique placée dans une annexe</span><b>Credits linked to households without complete monitoring evidence must be excluded from the issuance request until the evidence gap is resolved.</b></div></div><small class="doc-note">Exemple fictif construit pour l’atelier : l’information décisive existe bien dans le document, mais elle est éloignée de la section principale sur le calcul des crédits.</small></div><div class="quiz-side"><div class="live-badge"><i></i>${active&&state.interactionOpen?'QUESTION OUVERTE':'INTERACTION'}</div><p class="question-small">${esc(def.question)}</p>${show?donut:`<div class="placeholder-results compact-placeholder"><strong>${active&&state.interactionOpen?'Répondez sur votre téléphone':'Prêt à lancer'}</strong><p>Le résultat apparaîtra ici.</p></div>`}${show?`<div class="spoiler"><b>Non, pas forcément.</b><p>Dans un système RAG, le rapport peut être découpé en nombreux passages. Si la requête fait remonter la section « calcul d’émission » mais pas l’annexe 12, le modèle peut ne jamais recevoir la règle d’exclusion.</p><small>Nuance : certains systèmes injectent le document entier lorsque sa taille le permet. « Lost in the Middle » (2023) montre aussi que la position d’une information dans un contexte long peut affecter son utilisation.</small></div>`:''}</div></div></article>`;
+  return `<article class="slide retrieval-demo"><div class="eyebrow">Recherche documentaire</div><h2>Cette information sera-t-elle forcément retrouvée ?</h2><div class="doc-quiz-grid"><div class="fake-doc"><div class="doc-head"><b>MONITORING REPORT · COOKSTOVE</b><span>12 pages</span></div><h3>4. Validation du reporting</h3><p>Le rapport est contrôlé avant soumission finale.</p><div class="muted-section"><h4>8. Annexe opérationnelle</h4><div class="hidden-fact"><span>Point sensible</span><b>Si une donnée terrain dépasse le seuil de tolérance, une revue manuelle est obligatoire.</b></div></div></div><div class="quiz-side"><div class="live-badge"><i></i>${active&&state.interactionOpen?'QUESTION OUVERTE':'Interaction'}</div><p class="question-small">${esc(def.question)}</p>${show?donut:`<div class="placeholder-results compact-placeholder"><strong>${active&&state.interactionOpen?'Réponses en cours':'Prêt'}</strong><p>Le résultat apparaîtra ici.</p></div>`}${show?`<div class="spoiler"><b>Réponse : non, pas forcément.</b><p>Selon l’architecture, seuls certains passages sont récupérés puis transmis au modèle.</p><small>Référence utile : Lost in the Middle, 2023.</small></div>`:''}</div></div></article>`;
 }
 
 const promptFreeform='Analyse ce rapport de projet carbone et dis-moi ce qui est important pour la direction.';
@@ -388,22 +389,18 @@ CONTRAINTES
 ${promptBlocks[4][1]}`;
 }
 function slidePromptLab(){
-  return `<article class="slide prompt-lab-v5"><div class="eyebrow">Prompt Lab</div><h2>On peut parler naturellement à l’IA… puis structurer quand l’enjeu augmente.</h2><div class="prompt-free"><span class="panel-label">Point de départ · prompt écrit ou parlé</span><p>« ${promptFreeform} »</p></div><div class="prompt-v5-grid"><div class="prompt-structure prompt-steps-v5">${promptBlocks.map((x,i)=>`<button class="prompt-part ${component.promptLevel>=i+1?'on':''} ${i===5?'final-step':''}" data-prompt-level="${i+1}"><span>0${i+1}</span><div><b>${x[0]}</b><small>${x[1]}</small></div></button>`).join('')}</div><div class="prompt-card prompt-output-card"><div class="panel-label">${component.promptLevel===6?'Structure finale · réutilisable':'Prompt amélioré progressivement'}</div><pre class="prompt-output">${esc(promptForLevel(component.promptLevel))}</pre><div class="prompt-quality"><span>Spontané</span><div><i style="width:${Math.max(10,(component.promptLevel/6)*100)}%"></i></div><span>Structuré</span></div><div class="prompt-mini-tips"><span>Préciser le public</span><span>Définir le format</span><span>Demander les sources</span><span>Dire quoi exclure</span></div></div></div></article>`;
+  return `<article class="slide prompt-lab-v5"><div class="eyebrow">Prompt Lab</div><h2>Parler simplement, puis structurer si besoin.</h2><div class="prompt-free"><span class="panel-label">Point de départ · prompt écrit ou parlé</span><p>« ${promptFreeform} »</p></div><div class="prompt-v5-grid"><div class="prompt-structure prompt-steps-v5">${promptBlocks.map((x,i)=>`<button class="prompt-part ${component.promptLevel>=i+1?'on':''} ${i===5?'final-step':''}" data-prompt-level="${i+1}"><span>0${i+1}</span><div><b>${x[0]}</b><small>${x[1]}</small></div></button>`).join('')}</div><div class="prompt-card prompt-output-card"><div class="panel-label">${component.promptLevel===6?'Structure finale · réutilisable':'Prompt amélioré progressivement'}</div><pre class="prompt-output">${esc(promptForLevel(component.promptLevel))}</pre><div class="prompt-quality"><span>Spontané</span><div><i style="width:${Math.max(10,(component.promptLevel/6)*100)}%"></i></div><span>Structuré</span></div><div class="prompt-mini-tips"><span>Préciser le public</span><span>Définir le format</span><span>Demander les sources</span><span>Dire quoi exclure</span></div></div></div></article>`;
 }
 
 const toolUses={
-  'Chat':['Question ponctuelle, brainstorming, reformulation, brouillon ou analyse rapide.','Moins adapté si le besoin doit conserver beaucoup de contexte sur la durée.'],
-  'Recherche web':['Recherche, veille, comparaison de sources et investigation.','À éviter si l’analyse doit reposer exclusivement sur un corpus interne.'],
-  'Espace de travail':['Projet suivi plusieurs semaines avec documents récurrents, contexte à conserver et travail continu.','Inutile pour une question unique très simple.'],
-  'GPT':['Besoin récurrent avec les mêmes instructions, le même format de réponse et des connaissances spécifiques.','À éviter si le besoin change complètement à chaque demande.'],
-  'Chatbot documentaire':['Interroger régulièrement un corpus interne et obtenir des réponses adossées aux documents.','Exemples : Supplier Quote · Méthodologie Cookstove. Nécessite des documents fiables et une gouvernance des sources.'],
-  'Agent':['Besoin en plusieurs étapes : chercher → analyser → agir → vérifier.','À éviter pour une simple réponse textuelle ponctuelle.'],
-  'Meeting Notes':['Transcription, compte rendu, décisions, responsables et deadlines.','À utiliser seulement lorsque les données de réunion peuvent être traitées.'],
-  'Workflow':['Processus répétitif et suffisamment stable : nouveau document → analyse → extraction → création d’un fichier → notification.','À éviter tant que le processus change encore en permanence.']
+  'Chat':['Question rapide, brouillon, reformulation ou brainstorming.','Moins adapté si le besoin doit garder beaucoup de contexte.'],
+  'Espace de travail':['Sujet suivi dans le temps avec plusieurs documents.','Inutile pour une question très simple.'],
+  'GPT / Assistant documentaire':['Besoin récurrent avec consignes stables ou questions sur un corpus interne.','À utiliser avec des sources fiables et bien gouvernées.'],
+  'Workflow':['Processus répétitif et stable.','À éviter si le processus change encore trop souvent.']
 };
 function slideToolLandscape(){
   const current=component.toolUse||'Chat', info=toolUses[current];
-  return `<article class="slide tool-v5"><div class="eyebrow">Quel outil IA pour quel besoin ?</div><h2>Quelle forme d’IA convient à mon besoin ?</h2><div class="tool-landscape tool-landscape-v5"><div class="tool-menu tool-menu-v5">${Object.keys(toolUses).map(k=>`<button class="${current===k?'active':''}" data-tool-use="${esc(k)}"><strong>${esc(k)}</strong></button>`).join('')}</div><div class="tool-detail tool-detail-v5"><span class="panel-label">${esc(current)}</span><h3>${esc(info[0])}</h3><p>${esc(info[1])}</p>${current==='Chatbot documentaire'?'<div class="example-pills big-pills"><span>Supplier Quote</span><span>Méthodologie Cookstove</span></div>':''}<div class="tool-note">Choisir l’outil après avoir défini le besoin, le niveau de risque, la durée du contexte et le degré d’automatisation attendu.</div></div></div></article>`;
+  return `<article class="slide tool-v6"><div class="eyebrow">Quel outil IA pour quel besoin ?</div><h2>Choisir la bonne forme d’IA.</h2><div class="tool-landscape tool-landscape-v5"><div class="tool-menu tool-menu-v5">${Object.keys(toolUses).map(k=>`<button class="${current===k?'active':''}" data-tool-use="${esc(k)}"><strong>${esc(k)}</strong></button>`).join('')}</div><div class="tool-detail tool-detail-v5"><span class="panel-label">${esc(current)}</span><h3>${esc(info[0])}</h3><p>${esc(info[1])}</p>${current==='GPT / Assistant documentaire'?'<div class="example-pills big-pills"><span>Supplier Quote</span><span>Méthodologie Cookstove</span><span>Base documentaire</span></div>':''}<div class="tool-note">Toujours partir du besoin, puis choisir l’outil.</div></div></div></article>`;
 }
 
 function slideAgents(){
@@ -428,18 +425,17 @@ function slideNextPriorities(){
 }
 
 function slideFinal(){
-  return `<article class="slide final-brand final-v5"><div class="eyebrow">Conclusion</div><h2>L’objectif n’est pas d’utiliser plus d’IA.</h2><div class="final-reveal">C’est de faciliter notre travail lorsque la tâche le permet.</div><p class="final-subtitle">L’IA à votre service au travail, mais pas l’inverse.</p><div class="loop-row"><span>Tester</span><span>→</span><span>Mesurer</span><span>→</span><span>Garder ce qui fonctionne</span><span>→</span><span>Automatiser</span></div><button class="btn primary" style="margin-top:28px;align-self:flex-start" data-goto="16">Voir le document source →</button></article>`;
+  return `<article class="slide final-brand final-v5"><div class="eyebrow">Conclusion</div><h2>L’objectif n’est pas d’utiliser plus d’IA.</h2><div class="final-reveal">C’est de faciliter notre travail lorsque la tâche le permet.</div><p class="final-subtitle">L’IA à votre service au travail, mais pas l’inverse.</p><div class="loop-row"><span>Tester</span><span>→</span><span>Mesurer</span><span>→</span><span>Garder ce qui fonctionne</span><span>→</span><span>Automatiser</span></div><button class="btn primary" style="margin-top:28px;align-self:flex-start" data-goto="14">Voir le document source →</button></article>`;
 }
 
 function slideSourceDocument(){
-  return `<article class="slide source-slide"><div class="eyebrow">Le document source</div><h2>Toute cette présentation a été construite à partir de ce document.</h2><div class="source-doc-grid"><div class="doc-preview"><img src="/docs/AI_Pulse_Cahier_Source_preview.png" alt="Aperçu du cahier source"></div><div class="source-copy"><span class="panel-label">Cahier de conception · v5</span><h3>Brief initial + objectifs + interactions + arbitrages + pédagogie + charte graphique + structure finale.</h3><p>Le document conserve aussi les demandes remplacées afin de garder la trace de l’élaboration. La version présentée applique les arbitrages les plus récents, y compris les dernières modifications demandées slide par slide.</p><div class="source-actions"><a class="btn primary" href="/docs/AI_Pulse_Cahier_Source.pdf" target="_blank">Ouvrir le PDF</a><a class="btn secondary" href="/docs/AI_Pulse_Cahier_Source.docx" target="_blank">Ouvrir le DOCX</a></div></div></div></article>`;
+  return `<article class="slide source-slide"><div class="eyebrow">Le document source</div><h2>Toute cette présentation a été construite à partir de ce document.</h2><div class="source-doc-grid"><div class="doc-preview"><img src="/docs/AI_Pulse_Cahier_Source_preview.png" alt="Aperçu du cahier source"></div><div class="source-copy"><span class="panel-label">Cahier de conception · v6</span><h3>Brief, structure, contenus et arbitrages.</h3><p>Le document source retrace l’évolution de la présentation et la version retenue.</p><div class="source-actions"><a class="btn primary" href="/docs/AI_Pulse_Cahier_Source.pdf" target="_blank">Ouvrir le PDF</a><a class="btn secondary" href="/docs/AI_Pulse_Cahier_Source.docx" target="_blank">Ouvrir le DOCX</a></div></div></div></article>`;
 }
 
 function bindSlideEvents(){
   document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>goSlide(Number(b.dataset.goto)));
   document.querySelectorAll('[data-flow]').forEach(b=>b.onclick=()=>{component.flow=b.dataset.flow;render();});
   document.querySelectorAll('[data-prompt-level]').forEach(b=>b.onclick=()=>{component.promptLevel=Number(b.dataset.promptLevel);render();});
-      document.querySelectorAll('[data-note]').forEach(b=>b.onclick=()=>{component.noteTab=b.dataset.note;render();});
     document.querySelectorAll('[data-tool-use]').forEach(b=>b.onclick=()=>{component.toolUse=b.dataset.toolUse;render();});
 }
 
@@ -479,7 +475,7 @@ function renderParticipantInteraction(id){
 
 function renderSubmitted(id,def){
   const special=id==='retrievalCheck';
-  return `<div class="mobile-panel waiting"><div class="success-mark">✓</div><div class="eyebrow">Réponse enregistrée</div><h1>Merci !</h1><p>${special?'Le débrief apparaîtra juste après sur l’écran principal : l’idée est de comprendre comment fonctionne la recherche documentaire, pas de faire un quiz.':'Vous pouvez modifier votre réponse tant que la question reste ouverte en rechargeant cette vue.'}</p>${state.showResults && def.type!=='text'?`<div style="margin-top:18px">${renderMobileBars(def,state.aggregates[id])}</div>`:''}</div>`;
+  return `<div class="mobile-panel waiting"><div class="success-mark">✓</div><div class="eyebrow">Réponse enregistrée</div><h1>Merci !</h1><p>${special?'Le débrief apparaîtra sur l’écran principal.':'Vous pouvez modifier votre réponse tant que la question reste ouverte en rechargeant cette vue.'}</p>${state.showResults && def.type!=='text'?`<div style="margin-top:18px">${renderMobileBars(def,state.aggregates[id])}</div>`:''}</div>`;
 }
 function renderMobileBars(def,agg){
   return `<div class="result-list">${def.options.map(([id,label])=>`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span>${esc(label)}</span><b>${pct(agg.counts[id]||0,agg.total)}%</b></div><div class="bar"><i style="width:${pct(agg.counts[id]||0,agg.total)}%"></i></div></div>`).join('')}</div>`;
