@@ -1,4 +1,4 @@
-# AI Pulse v5 — Removall & IA
+# AI Pulse v7 — Removall & IA
 
 Présentation interactive + questionnaire live pour atelier interne Removall Carbon.
 
