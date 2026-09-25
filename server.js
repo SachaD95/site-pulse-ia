@@ -24,6 +24,16 @@ const interactionDefinitions = {
       ['daily10', 'Plus de 10 fois par jour']
     ]
   },
+  timeSaved: {
+    type: 'single',
+    question: "Combien de temps avez-vous l’impression que l’IA vous fait gagner chaque jour ?",
+    options: [
+      ['min10', 'Environ 10 min / jour'],
+      ['min30', 'Environ 30 min / jour'],
+      ['hour1', 'Environ 1 h / jour'],
+      ['hours', 'Plusieurs heures / jour']
+    ]
+  },
   appetite: {
     type: 'single',
     question: "J’aimerais automatiser davantage certaines tâches avec l’IA.",
@@ -50,42 +60,27 @@ const interactionDefinitions = {
       ['other', 'Autre']
     ]
   },
-  ideaWall: {
-    type: 'text',
-    question: "Si tu pouvais automatiser UNE chose demain avec l’IA, ce serait quoi ?"
-  },
-  quizPrompt: {
+  retrievalCheck: {
     type: 'single',
-    question: "Pour obtenir de meilleurs résultats d’une IA, qu’est-ce qui compte le plus ?",
+    question: "Dans un assistant documentaire basé sur la recherche de passages, cette information sera-t-elle forcément retrouvée ?",
     options: [
-      ['long', 'Faire un prompt très long'],
-      ['context', 'Donner du contexte'],
-      ['technical', 'Utiliser beaucoup de mots techniques'],
-      ['english', 'Écrire en anglais']
+      ['yes', 'Oui, forcément'],
+      ['no', 'Non, pas forcément']
     ],
-    correct: 'context'
+    correct: 'no'
   },
-  quizAgent: {
+  nextPriority: {
     type: 'single',
-    question: "Quand un agent IA devient-il particulièrement utile ?",
+    question: "Quelle priorité IA devrions-nous approfondir ensuite ?",
     options: [
-      ['simple', 'Pour une question très simple'],
-      ['steps', 'Quand plusieurs étapes doivent être enchaînées'],
-      ['long', 'Quand le prompt dépasse une page'],
-      ['english', 'Quand la demande est en anglais']
-    ],
-    correct: 'steps'
-  },
-  finalTest: {
-    type: 'single',
-    question: "Après cette session, qu’aimerais-tu tester ?",
-    options: [
-      ['prompts', 'Améliorer mes prompts'],
-      ['assistant', 'Construire un assistant spécialisé'],
-      ['agents', 'Tester les agents'],
-      ['meetings', 'Automatiser mes réunions'],
-      ['business', 'Automatiser une tâche métier'],
-      ['sites', 'Créer quelque chose avec ChatGPT Sites']
+      ['supplierQuote', 'Supplier Quote'],
+      ['cookstove', 'Assistant méthodologie cookstove'],
+      ['meetingNotes', 'Meeting Notes automatiques'],
+      ['docSearch', 'Recherche documentaire interne'],
+      ['reporting', 'Reporting / Excel'],
+      ['meetingPrep', 'Préparation de réunions / rendez-vous'],
+      ['emails', 'Brouillons d’e-mails / communications'],
+      ['workflow', 'Workflow opérationnel répétitif']
     ]
   }
 };
@@ -184,6 +179,7 @@ function aggregateInteraction(session, id) {
 
 function dashboard(session) {
   const f = aggregateInteraction(session, 'frequency');
+  const t = aggregateInteraction(session, 'timeSaved');
   const a = aggregateInteraction(session, 'appetite');
   const p = aggregateInteraction(session, 'priorities');
   const daily = f.total ? Math.round(((f.counts.daily1 + f.counts.daily5 + f.counts.daily10) / f.total) * 100) : 0;
@@ -191,9 +187,12 @@ function dashboard(session) {
   const appetiteScore = a.total ? Math.round(((a.counts.some * 33 + a.counts.more * 67 + a.counts.allin * 100) / a.total)) : 0;
   const freqScore = f.total ? Math.round(((f.counts.daily1 * 35 + f.counts.daily5 * 70 + f.counts.daily10 * 100) / f.total)) : 0;
   const maturity = Math.round(freqScore * 0.6 + appetiteScore * 0.4);
+  const savedMinutes = t.total ? Math.round((t.counts.min10 * 10 + t.counts.min30 * 30 + t.counts.hour1 * 60 + t.counts.hours * 120) / t.total) : 0;
+  const avgMinutesSavedLabel = savedMinutes >= 60 ? `${(savedMinutes/60).toFixed(savedMinutes%60?1:0).replace('.',',')} h` : `${savedMinutes} min`;
+  const annualHoursSaved = Math.round(savedMinutes * 220 / 60);
   const labels = Object.fromEntries((interactionDefinitions.priorities.options || []).map(([k, v]) => [k, v]));
   const top = Object.entries(p.counts).sort((x,y) => y[1] - x[1]).slice(0,3).map(([id, count]) => ({ id, label: labels[id], count }));
-  return { daily, wantsAuto, appetiteScore, freqScore, maturity, top };
+  return { daily, wantsAuto, appetiteScore, freqScore, maturity, top, savedMinutes, avgMinutesSavedLabel, annualHoursSaved };
 }
 
 function publicState(session, presenter = false) {
@@ -284,7 +283,7 @@ function serveStatic(req, res, pathname) {
   if (!filePath.startsWith(PUBLIC_DIR)) return false;
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) return false;
   const ext = path.extname(filePath).toLowerCase();
-  const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'application/javascript; charset=utf-8', '.svg':'image/svg+xml', '.png':'image/png', '.json':'application/json; charset=utf-8' };
+  const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'application/javascript; charset=utf-8', '.svg':'image/svg+xml', '.png':'image/png', '.json':'application/json; charset=utf-8', '.pdf':'application/pdf', '.docx':'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
   res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream', 'Cache-Control': ext === '.html' ? 'no-store' : 'public, max-age=3600' });
   fs.createReadStream(filePath).pipe(res);
   return true;
@@ -293,44 +292,30 @@ function serveStatic(req, res, pathname) {
 function makeDemoResponses() {
   const ids = Array.from({length: 28}, (_,i) => `demo-${i+1}`);
   const frequencyVals = ['rarely','daily1','daily1','daily5','daily5','daily5','daily10'];
+  const timeSavedVals = ['min10','min30','min30','hour1','hour1','hours','min30'];
   const appetiteVals = ['no','some','some','more','more','allin','allin'];
   const priorityVals = [
     ['meetings','emails','prep'], ['excel','repetitive'], ['docs','research'], ['meetings','slides'],
     ['emails','repetitive'], ['excel','docs','research'], ['meetings','prep','repetitive']
   ];
+  const nextVals = ['supplierQuote','cookstove','meetingNotes','docSearch','reporting','meetingPrep','emails','workflow'];
   return {
     frequency: Object.fromEntries(ids.map((id,i) => [id, frequencyVals[i % frequencyVals.length]])),
+    timeSaved: Object.fromEntries(ids.map((id,i) => [id, timeSavedVals[i % timeSavedVals.length]])),
     appetite: Object.fromEntries(ids.map((id,i) => [id, appetiteVals[i % appetiteVals.length]])),
     priorities: Object.fromEntries(ids.map((id,i) => [id, priorityVals[i % priorityVals.length]])),
-    quizPrompt: Object.fromEntries(ids.slice(0,22).map((id,i) => [id, i % 5 === 0 ? 'long' : 'context'])),
-    quizAgent: Object.fromEntries(ids.slice(0,20).map((id,i) => [id, i % 6 === 0 ? 'simple' : 'steps'])),
-    finalTest: Object.fromEntries(ids.slice(0,24).map((id,i) => [id, ['prompts','assistant','agents','meetings','business','sites'][i % 6]]))
+    retrievalCheck: Object.fromEntries(ids.slice(0,24).map((id,i) => [id, i % 4 === 0 ? 'yes' : 'no'])),
+    nextPriority: Object.fromEntries(ids.slice(0,26).map((id,i) => [id, nextVals[(i*i + i) % nextVals.length]]))
   };
 }
 
 function loadDemo(session) {
   session.responses = makeDemoResponses();
-  const demoIdeas = [
-    'Préparer automatiquement un compte-rendu avec actions après chaque réunion.',
-    'Générer un briefing client avant les rendez-vous.',
-    'Mettre à jour le reporting Excel à partir des données hebdomadaires.',
-    'Trier les emails et proposer des brouillons de réponse.',
-    'Chercher rapidement dans nos procédures internes.',
-    'Créer une première version des présentations commerciales.',
-    'Analyser les contrats et faire ressortir les points de vigilance.',
-    'Transformer les notes de réunion en tâches assignées.'
-  ];
-  session.ideas = demoIdeas.map((text,i) => ({ id:`demo-idea-${i+1}`, text, createdAt:new Date().toISOString(), demo:true }));
-  session.shortlistedIdeaIds = session.ideas.slice(0,6).map(x => x.id);
-  session.ideaVotes = {
-    'demo-1': {'demo-idea-1':2,'demo-idea-2':1},
-    'demo-2': {'demo-idea-3':2,'demo-idea-1':1},
-    'demo-3': {'demo-idea-4':1,'demo-idea-2':2},
-    'demo-4': {'demo-idea-5':1,'demo-idea-1':2},
-    'demo-5': {'demo-idea-3':1,'demo-idea-6':2}
-  };
   const demoIds = Array.from({length:28}, (_,i) => `demo-${i+1}`);
   demoIds.forEach((id,i) => session.participants[id] = Date.now() - i*1000);
+  session.ideas = [];
+  session.shortlistedIdeaIds = [];
+  session.ideaVotes = {};
   session.demoLoaded = true;
 }
 
@@ -484,7 +469,7 @@ const server = http.createServer(async (req, res) => {
       const body = await parseBody(req).catch(() => ({}));
       if (!isPresenter(session,url,body)) return sendJson(res, 403, { error:'Accès présentateur requis' });
       const type = body.type;
-      if (type === 'setSlide') session.slideIndex = Math.max(0, Math.min(19, Number(body.slideIndex) || 0));
+      if (type === 'setSlide') session.slideIndex = Math.max(0, Math.min(16, Number(body.slideIndex) || 0));
       if (type === 'openInteraction') {
         session.activeInteraction = body.interactionId || null;
         session.interactionOpen = Boolean(body.interactionId);

@@ -1,97 +1,54 @@
-# AI Pulse — présentation interactive + questionnaire live
+# AI Pulse v5 — Removall & IA
 
-MVP autonome basé sur le brief fourni : présentation 16:9 côté animateur, expérience mobile côté participants, interactions synchronisées en direct et stockage des sessions sur le serveur.
+Présentation interactive + questionnaire live pour atelier interne Removall Carbon.
 
-## Démarrage
+## Lancer en local
 
-Pré-requis : **Node.js 18+**.
+Node.js 18+ :
 
 ```bash
 npm start
 ```
 
 Le terminal affiche :
+- l’URL Présentateur avec la clé privée ;
+- l’URL Participant.
 
-- une URL **Présentateur** contenant une clé privée de contrôle ;
-- une URL **Participant** ;
-- les adresses réseau local détectées.
+## Déploiement Render
 
-La slide d'introduction affiche un QR code vers l'URL courte :
+Configuration recommandée :
+- Runtime : Node
+- Build command : `npm install`
+- Start command : `npm start`
+- Root Directory : laisser vide si `package.json` est à la racine du repository ; sinon indiquer le dossier qui contient `package.json`.
 
-```text
-http://VOTRE-HOTE:4173/join/AI-2026-09
-```
+Le serveur utilise `process.env.PORT`, donc il est compatible Render.
 
-Pour les participants sur smartphone, utilisez l'adresse IP ou le nom DNS de la machine qui héberge AI Pulse, par exemple :
+## Parcours v5
 
-```text
-http://192.168.1.42:4173/join/AI-2026-09
-```
+La v5 suit strictement le script maître fourni :
+- 17 slides, sans ajout de slide ;
+- identité plus claire et lumineuse selon la charte Removall ;
+- 4 questions live ;
+- dashboard live ;
+- loupe temps gagné plus visuelle ;
+- fonctionnement de l’IA simplifié autour de la boîte noire, du machine learning et de la vérification ;
+- démonstration documentaire adaptée à un rapport de crédits carbone ;
+- Prompt Lab avec prompt naturel puis étape finale « Structure du prompt » ;
+- slide outils IA plus lisible et plus grande ;
+- vote final avec animation de révélation de 3 priorités, sans podium ;
+- conclusion mise à jour ;
+- vrai document source affiché à la fin.
 
-Le port `4173` doit être autorisé par le pare-feu local.
+## Documents source
 
-## Fonctionnalités incluses
+Le dossier contient :
+- `AI_Pulse_Cahier_Source.md`
+- `AI_Pulse_Cahier_Source.docx`
+- `AI_Pulse_Cahier_Source.pdf`
 
-- 20 écrans au format présentation avec navigation clavier, boutons et plein écran.
-- Vue séparée **Presenter controls** et mode participant mobile.
-- Sondage fréquence IA avec histogramme live.
-- Sondage appétit pour l'automatisation avec jauge collective.
-- Sondage multi-choix sur les tâches à automatiser avec classement dynamique.
-- Dashboard calculé uniquement depuis les réponses de la session.
-- Slides pédagogiques : fonctionnement IA, Prompt Lab, espace de travail, assistant spécialisé, agents et Meeting Notes.
-- Mur d'idées anonymes limité à 200 caractères.
-- Regroupement assisté déterministe par mots-clés + nuage de mots. Il est explicitement présenté comme non-IA pour ne pas simuler une analyse dynamique.
-- Shortlist d'idées puis vote collectif à **3 voix par participant**.
-- Deux mini-quiz avec explication immédiate.
-- Arbre de décision « Quel outil IA pour mon besoin ? ».
-- Interaction finale sur ce que les participants veulent tester.
-- Réactions live 👍 ❤️ 💡 🤯.
-- Timer 30/60 secondes.
-- Compteur de participants actifs.
-- Mode démo clairement identifié comme fictif.
-- Export CSV des réponses, idées et votes.
-- Réinitialisation avec confirmation.
-- Création d'une nouvelle session sans supprimer les précédentes.
-- Persistance locale dans `data/sessions.json`.
-- Synchronisation push via **Server-Sent Events (SSE)**, sans rechargement manuel.
-- QR code généré localement, sans dépendance CDN.
+Les mêmes documents sont disponibles dans `public/docs/` afin d’être ouverts directement depuis la dernière slide.
 
 ## Confidentialité
 
-Aucun nom, e-mail ou autre donnée personnelle n'est demandé. Le navigateur génère uniquement un identifiant anonyme local afin d'éviter les doubles réponses et de gérer les votes.
-
-Les données restent dans le fichier `data/sessions.json` du serveur jusqu'à réinitialisation ou suppression manuelle.
-
-## Raccourcis présentateur
-
-- `←` / `→` : slide précédente / suivante
-- `Espace` : slide suivante
-- `F` : plein écran
-
-## Mise en production interne recommandée
-
-Le MVP fonctionne sur un réseau interne. Pour une utilisation d'entreprise durable, ajoutez idéalement :
-
-- HTTPS via reverse proxy ;
-- SSO ou authentification forte pour le rôle présentateur ;
-- base de données managée à la place du fichier JSON ;
-- politique de conservation / suppression des sessions ;
-- sauvegardes et journalisation adaptées.
-
-## Structure
-
-```text
-ai-pulse-site/
-├── server.js
-├── package.json
-├── README.md
-├── data/
-│   └── sessions.json
-├── lib/
-│   ├── QR-LICENSE.txt
-│   └── qrcode/
-└── public/
-    ├── index.html
-    ├── styles.css
-    └── app.js
-```
+Aucun nom ni e-mail n’est demandé. Les réponses sont associées uniquement à un identifiant anonyme local par session.

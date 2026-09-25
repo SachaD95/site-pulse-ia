@@ -1,39 +1,16 @@
 {
   "AI-2026-09": {
     "id": "AI-2026-09",
-    "presenterKey": "7d13fb57746dc51f",
-    "createdAt": "2026-09-24T08:51:34.098Z",
-    "updatedAt": "2026-09-24T10:47:04.481Z",
+    "presenterKey": "3351484a5ec83ff0",
+    "createdAt": "2026-09-24T13:28:49.288Z",
+    "updatedAt": "2026-09-25T08:58:49.822Z",
     "slideIndex": 0,
     "activeInteraction": null,
     "interactionOpen": false,
     "showResults": false,
     "timerEndsAt": null,
     "responses": {},
-    "participants": {
-      "71512e5f-3a24-454d-a0a5-e5d63709d748": 1790246824481,
-      "anon-mp082562d": 1790240802557,
-      "anon-615yyh4l4rs": 1790241376547
-    },
-    "ideas": [],
-    "shortlistedIdeaIds": [],
-    "ideaVotes": {},
-    "demoLoaded": false
-  },
-  "AI-2026-09-3DED": {
-    "id": "AI-2026-09-3DED",
-    "presenterKey": "d4e1da420fa3c9fd",
-    "createdAt": "2026-09-24T09:05:30.345Z",
-    "updatedAt": "2026-09-24T10:44:28.046Z",
-    "slideIndex": 0,
-    "activeInteraction": null,
-    "interactionOpen": false,
-    "showResults": false,
-    "timerEndsAt": null,
-    "responses": {},
-    "participants": {
-      "c3c97e56-2a21-469d-9046-4a68e38966ac": 1790246668046
-    },
+    "participants": {},
     "ideas": [],
     "shortlistedIdeaIds": [],
     "ideaVotes": {},
