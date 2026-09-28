@@ -13,7 +13,15 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 const DATA_FILE = path.join(__dirname, 'data', 'sessions.json');
 const sseClients = new Map();
 
+const SLIDE_COUNT = 7;
+
 const interactionDefinitions = {
+  associations: {
+    type: 'text',
+    question: "Que vous évoque l’IA ?",
+    placeholder: "3 mots, usages ou idées…",
+    maxLength: 120
+  },
   frequency: {
     type: 'single',
     question: "Fréquence d’utilisation de l’IA ?",
@@ -26,7 +34,7 @@ const interactionDefinitions = {
   },
   timeSaved: {
     type: 'single',
-    question: "Temps gagné avec l’IA chaque jour ?",
+    question: "Combien de temps gagnez-vous par jour grâce à l’IA ?",
     options: [
       ['min10', 'Environ 10 min / jour'],
       ['min30', 'Environ 30 min / jour'],
@@ -62,7 +70,7 @@ const interactionDefinitions = {
   },
   retrievalCheck: {
     type: 'single',
-    question: "Cette information sera-t-elle retrouvée ?",
+    question: "Le chat retrouvera-t-il la bonne delivery date ?",
     options: [
       ['yes', 'Oui, forcément'],
       ['no', 'Non, pas forcément']
@@ -300,6 +308,7 @@ function makeDemoResponses() {
   ];
   const nextVals = ['supplierQuote','cookstove','meetingNotes','docSearch','reporting','meetingPrep','emails','workflow'];
   return {
+    associations: Object.fromEntries(ids.map((id,i) => [id, 'submitted'])),
     frequency: Object.fromEntries(ids.map((id,i) => [id, frequencyVals[i % frequencyVals.length]])),
     timeSaved: Object.fromEntries(ids.map((id,i) => [id, timeSavedVals[i % timeSavedVals.length]])),
     appetite: Object.fromEntries(ids.map((id,i) => [id, appetiteVals[i % appetiteVals.length]])),
@@ -313,7 +322,11 @@ function loadDemo(session) {
   session.responses = makeDemoResponses();
   const demoIds = Array.from({length:28}, (_,i) => `demo-${i+1}`);
   demoIds.forEach((id,i) => session.participants[id] = Date.now() - i*1000);
-  session.ideas = [];
+  const demoWords = [
+    'gain de temps', 'rédaction', 'automatisation', 'recherche', 'curiosité', 'productivité',
+    'gain de temps', 'analyse', 'risque', 'qualité', 'prompt', 'veille', 'emails', 'meeting notes'
+  ];
+  session.ideas = demoWords.map((text, i) => ({ id: `idea-demo-${i+1}`, anonId: `demo-${i+1}`, text, createdAt:new Date().toISOString(), demo:true }));
   session.shortlistedIdeaIds = [];
   session.ideaVotes = {};
   session.demoLoaded = true;
@@ -469,7 +482,7 @@ const server = http.createServer(async (req, res) => {
       const body = await parseBody(req).catch(() => ({}));
       if (!isPresenter(session,url,body)) return sendJson(res, 403, { error:'Accès présentateur requis' });
       const type = body.type;
-      if (type === 'setSlide') session.slideIndex = Math.max(0, Math.min(16, Number(body.slideIndex) || 0));
+      if (type === 'setSlide') session.slideIndex = Math.max(0, Math.min(SLIDE_COUNT - 1, Number(body.slideIndex) || 0));
       if (type === 'openInteraction') {
         session.activeInteraction = body.interactionId || null;
         session.interactionOpen = Boolean(body.interactionId);

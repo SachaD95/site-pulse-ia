@@ -16,14 +16,19 @@ let voteAllocation = {};
 let anonId = null;
 
 const slideInteraction = {
-  2:'frequency', 3:'timeSaved', 4:'appetite', 5:'priorities', 9:'retrievalCheck', 12:'nextPriority'
+  0:'associations',
+  1:'timeSaved',
+  5:'retrievalCheck'
 };
 
 const slideTitles = [
-  'Introduction', 'Objectifs', 'Fréquence', 'Temps gagné', 'Automatisation', 'Priorités',
-  'Synthèse', 'Loupe temps gagné', 'Comment ça marche ?', 'Info retrouvée ?', 'Prompt Lab',
-  'Quel outil ?', 'Prochaines priorités', 'Conclusion', 'Document source',
-  'Planning utilisation IA', 'Removall Carbon'
+  'Que vous évoque l’IA ?',
+  'Temps gagné grâce à l’IA',
+  'Loupe · repères de recherche',
+  'Quel outil pour ce type de requête ?',
+  'Construire un bon prompt',
+  'L’IA va-t-elle trouver l’info ?',
+  'Document source'
 ];
 
 function getAnonId(sid){
@@ -157,7 +162,7 @@ function renderPresenter(){
           <button class="btn icon" id="prevSlide" aria-label="Précédent">←</button>
           <button class="btn icon" id="nextSlide" aria-label="Suivant">→</button>
         </div>
-        ${state.slideIndex < slideTitles.length-2 ? `<div class="stage-footer"><span>${state.slideIndex+1}/${slideTitles.length}</span><div class="progress"><i style="width:${((state.slideIndex+1)/slideTitles.length)*100}%"></i></div><span>${esc(slideTitles[state.slideIndex])}</span></div>` : ''}
+        <div class="stage-footer"><span>${state.slideIndex+1}/${slideTitles.length}</span><div class="progress"><i style="width:${((state.slideIndex+1)/slideTitles.length)*100}%"></i></div><span>${esc(slideTitles[state.slideIndex])}</span></div>
       </div>
     </section>
     ${renderPresenterPanel()}
@@ -251,8 +256,54 @@ function startTimerLoop(){
 }
 
 function renderSlide(i){
-  const renderers=[slideIntro,slideObjectives,()=>slidePoll('frequency'),()=>slidePoll('timeSaved'),()=>slidePoll('appetite'),()=>slidePoll('priorities'),slideDashboard,slideTimeFocus,slideHowAI,slideRetrievalDemo,slidePromptLab,slideToolLandscape,slideNextPriorities,slideFinal,slideSourceDocument,slideIntegrationProcess,slideAIPlanning];
+  const renderers=[
+    slideAssociations,
+    ()=>slidePoll('timeSaved'),
+    slideTimeFocus,
+    slideToolCases,
+    slidePromptLab,
+    slideRetrievalDemo,
+    slideSourceDocument
+  ];
   return renderers[i]?.() || '';
+}
+
+function wordCloudData(ideas=[]){
+  const stop = new Set(['l','la','le','les','de','des','du','d','et','en','un','une','the','and','to','for','of','ia','ai']);
+  const counts = new Map();
+  const labelByKey = new Map();
+  for(const idea of ideas || []){
+    const raw = String(idea.text||'').replace(/\n/g,' ');
+    const tokens = raw.split(/[;,|/]+/).map(x=>x.trim()).filter(Boolean);
+    const parts = tokens.length ? tokens : raw.split(/\s{2,}/).map(x=>x.trim()).filter(Boolean);
+    for(let token of parts){
+      token = token.replace(/^[-–•]+\s*/,'').trim();
+      if(!token) continue;
+      const key = token.toLowerCase();
+      if(stop.has(key) || key.length < 3) continue;
+      counts.set(key,(counts.get(key)||0)+1);
+      if(!labelByKey.has(key)) labelByKey.set(key, token);
+    }
+  }
+  return [...counts.entries()]
+    .sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0]))
+    .slice(0,28)
+    .map(([key,count],idx)=>({key,label:labelByKey.get(key)||key,count,idx}));
+}
+
+function renderWordCloud(ideas=[]){
+  const items = wordCloudData(ideas);
+  if(!items.length){
+    const placeholders=['Automation','Gain de temps','Productivité','Curiosité','Risque','Idées','Rédaction','Recherche','Analyse','Prompt','Données','Marché carbone'];
+    return `<div class="word-cloud empty-cloud">${placeholders.map((w,i)=>`<span class="cloud-word level-${(i%4)+1} ghost">${esc(w)}</span>`).join('')}</div>`;
+  }
+  return `<div class="word-cloud">${items.map((item,i)=>`<span class="cloud-word level-${Math.min(5,Math.max(1,item.count))}" style="--rot:${i%3===0?-3:i%3===1?0:3}deg">${esc(item.label)}</span>`).join('')}</div>`;
+}
+
+function slideAssociations(){
+  const id='associations', active=state.activeInteraction===id;
+  const total=(state.ideas||[]).length;
+  return `<article class="slide associations-slide"><div class="eyebrow">Icebreaker</div><h2>Que vous évoque l’IA ?</h2><div class="associations-grid"><div class="association-side"><div class="live-badge"><i></i>${active&&state.interactionOpen?'COLLECTE OUVERTE':'Interaction'}</div><p class="association-lead">Invitez la salle à partager <strong>3 mots, usages ou idées</strong>. Les contributions alimentent ce nuage de mots en direct.</p><div class="association-notes"><div class="note-chip"><b>${total}</b><span>contribution${total>1?'s':''}</span></div><div class="note-chip"><b>Objectif</b><span>ouvrir la discussion sans cadrage trop tôt</span></div></div><div class="association-help"><strong>Consigne</strong><p>Par exemple : gain de temps, automatisation, risque, recherche, rédaction, curiosité…</p></div></div><div class="cloud-panel"><div class="cloud-head"><span>Nuage de mots</span><small>Se remplit au fil des réponses</small></div>${renderWordCloud(state.ideas||[])}<div class="cloud-foot">Pas besoin de faire « juste » : on cherche des perceptions, pas une bonne réponse.</div></div></div></article>`;
 }
 
 function brandMark(){
@@ -328,12 +379,12 @@ function slideDashboard(){
 function slideTimeFocus(){
   const d=state.dashboard, t=state.aggregates.timeSaved||{total:0,counts:{}};
   const studies=[
-    ['POWER USERS','> 30 min / jour','Microsoft & LinkedIn','Work Trend Index · 2024','31 000 personnes · 31 pays'],
-    ['COPILOT','≈ 14 min / jour','Microsoft WorkLab','Premiers utilisateurs · 2023','Commerciaux : ≈ 90 min / semaine'],
-    ['E-MAIL','≈ 2 h / semaine','NBER','7 137 knowledge workers · 66 entreprises','Temps en moins sur les e-mails'],
-    ['VENTE','+3 à +5 %','McKinsey','Potentiel · 2023','Estimation économique']
+    ['MICROSOFT RESEARCH','+21.2 %','Actions de productivité','Août 2026','Utilisateurs intensifs de GenAI : +21.2% d’actions de productivité et +7.1% d’actions de communication.'],
+    ['WORK TREND INDEX','20 000','Travailleurs sondés','Mai 2026','Enquête menée auprès de 20 000 knowledge workers déjà utilisateurs de l’IA, dans 10 pays.'],
+    ['NBER','< 50 %','Adoption réelle par tâche','Août 2026','L’usage est large mais encore superficiel : dans la plupart des tâches, moins d’un travailleur sur deux adopte réellement la GenAI.'],
+    ['FIELD EVIDENCE','⚠ qualité variable','Selon le type de tâche','Juillet 2026','L’efficacité augmente, mais la qualité peut baisser sur les tâches d’acquisition d’information : il faut vérifier.']
   ];
-  return `<article class="slide time-focus-slide"><div class="eyebrow">Loupe · temps gagné</div><h2>Votre perception, et quelques repères.</h2><div class="focus-v5"><div class="focus-panel live-focus"><span class="panel-label">Dans cette salle</span><div class="focus-number">${d.avgMinutesSavedLabel}<small>/ jour</small></div>${miniDistribution(definitions.timeSaved,t)}<div class="annualized big">≈ ${d.annualHoursSaved} h / personne / an</div></div><div class="research-visual-grid">${studies.map((s,i)=>`<div class="research-visual-card study-${i+1}"><span class="study-tag">${s[0]}</span><strong>${s[1]}</strong><b>${s[2]}</b><p>${s[3]}</p><small>${s[4]}</small></div>`).join('')}</div></div><div class="truth-band truth-v5"><strong>À retenir</strong><span>Pas de chiffre universel : le gain dépend de la tâche, de l’outil et du workflow.</span></div></article>`;
+  return `<article class="slide time-focus-slide"><div class="eyebrow">Loupe · repères externes</div><h2>Votre perception, puis les chiffres qui frappent.</h2><div class="focus-v5"><div class="focus-panel live-focus"><span class="panel-label">Dans cette salle</span><div class="focus-number">${d.avgMinutesSavedLabel}<small>/ jour</small></div>${miniDistribution(definitions.timeSaved,t)}<div class="annualized big">≈ ${d.annualHoursSaved} h / personne / an</div></div><div class="research-visual-grid">${studies.map((s,i)=>`<div class="research-visual-card study-${i+1}"><span class="study-tag">${s[0]}</span><strong>${s[1]}</strong><b>${s[2]}</b><p>${s[3]}</p><small>${s[4]}</small></div>`).join('')}</div></div><div class="truth-band truth-v5"><strong>À retenir</strong><span>Le gain existe, mais il dépend du type de tâche, de la qualité du workflow et du niveau de vérification.</span></div></article>`;
 }
 
 const aiFlowItems={
@@ -355,7 +406,7 @@ function slideRetrievalDemo(){
   const id='retrievalCheck', def=definitions[id], agg=state.aggregates[id]||{total:0,counts:{}}, active=state.activeInteraction===id, show=active&&state.showResults;
   const total=agg.total||1, yes=pct(agg.counts.yes||0,total), no=pct(agg.counts.no||0,total);
   const donut=`<div class="mini-donut" style="background:conic-gradient(#F5B297 0 ${yes}%,#4BBA84 ${yes}% 100%)"><div><b>${agg.total}</b><span>réponses</span></div></div><div class="retrieval-legend"><span><i style="background:#F5B297"></i>Oui ${yes}%</span><span><i style="background:#4BBA84"></i>Non ${no}%</span></div>`;
-  return `<article class="slide retrieval-demo"><div class="eyebrow">Recherche documentaire</div><h2>L’IA verra-t-elle cette info ?</h2><div class="doc-quiz-grid"><div class="fake-doc"><div class="doc-head"><b>MONITORING REPORT · COOKSTOVE</b><span>12 pages</span></div><h3>4. Validation du reporting</h3><p>Le rapport est contrôlé avant soumission finale.</p><div class="muted-section"><h4>8. Annexe opérationnelle</h4><div class="hidden-fact"><span>Point sensible</span><b>Si une donnée terrain dépasse le seuil de tolérance, une revue manuelle est obligatoire.</b></div></div></div><div class="quiz-side"><div class="live-badge"><i></i>${active&&state.interactionOpen?'QUESTION OUVERTE':'Interaction'}</div><p class="question-small">${esc(def.question)}</p>${show?donut:`<div class="placeholder-results compact-placeholder"><strong>${active&&state.interactionOpen?'Réponses en cours':'Prêt'}</strong><p>Le résultat apparaîtra ici.</p></div>`}${show?`<div class="spoiler"><b>Réponse : non, pas forcément.</b><p>Selon l’architecture, seuls certains passages sont récupérés puis transmis au modèle.</p><small>Référence utile : Lost in the Middle, 2023.</small></div>`:''}</div></div></article>`;
+  return `<article class="slide retrieval-demo"><div class="eyebrow">Recherche documentaire</div><h2>L’IA va-t-elle trouver la bonne delivery date ?</h2><div class="doc-quiz-grid carbon-doc-quiz"><div class="fake-doc carbon-doc"><div class="doc-head"><b>FORWARD CARBON CREDIT PURCHASE AGREEMENT</b><span>extract · 12 pages</span></div><div class="doc-lines"><p><b>Project:</b> Delta Mangrove Restoration Programme</p><p><b>Standard:</b> Verra VCS + CCB label under review</p><p><b>Volume:</b> 120,000 tCO₂e, split into two delivery tranches</p><p><b>Buyer:</b> Removall Carbon</p><p><b>Commercial target:</b> secure Q4 2026 retirements for key clients</p><p><b>Main delivery window:</b> first issuance expected by 30 September 2026</p><p><b>Payment terms:</b> Net 30 after issuance and transfer confirmation</p><p><b>Registry note:</b> serial numbers released only after verifier sign-off</p><p><b>Monitoring package:</b> includes field samples, satellite imagery and leakage memo</p><p><b>Operational note:</b> if CCB review slips, pricing stays unchanged for tranche 1</p><p><b>Annex reference:</b> Appendix B covers verifier sampling escalation</p></div><div class="hidden-fact"><span>Hidden critical info</span><b>Appendix B: if the verifier sample exceeds 15%, the first delivery date moves from 30 Sept 2026 to 14 Oct 2026.</b></div></div><div class="quiz-side"><div class="live-badge"><i></i>${active&&state.interactionOpen?'QUESTION OUVERTE':'Interaction'}</div><p class="question-small">${esc(def.question)}</p>${show?donut:`<div class="placeholder-results compact-placeholder"><strong>${active&&state.interactionOpen?'Réponses en cours':'Prêt'}</strong><p>Le résultat apparaîtra ici.</p></div>`}${show?`<div class="spoiler"><b>Réponse attendue : non, pas forcément.</b><p>L’information utile existe, mais elle est cachée dans une annexe et peut être manquée si la recherche documentaire ou le chunking ne la remonte pas.</p><small>Le bon réflexe : citer la section source et demander une vérification explicite de la date.</small></div>`:''}</div></div></article>`;
 }
 
 const promptFreeform='Analyse ce rapport de projet carbone et dis-moi ce qui est important pour la direction.';
@@ -393,15 +444,24 @@ function slidePromptLab(){
   return `<article class="slide prompt-lab-v5"><div class="eyebrow">Prompt Lab</div><h2>Du prompt libre au prompt utile.</h2><div class="prompt-free"><span class="panel-label">Point de départ · prompt écrit ou parlé</span><p>« ${promptFreeform} »</p></div><div class="prompt-v5-grid"><div class="prompt-structure prompt-steps-v5">${promptBlocks.map((x,i)=>`<button class="prompt-part ${component.promptLevel>=i+1?'on':''} ${i===5?'final-step':''}" data-prompt-level="${i+1}"><span>0${i+1}</span><div><b>${x[0]}</b><small>${x[1]}</small></div></button>`).join('')}</div><div class="prompt-card prompt-output-card"><div class="panel-label">${component.promptLevel===6?'Structure finale · réutilisable':'Prompt amélioré progressivement'}</div><pre class="prompt-output">${esc(promptForLevel(component.promptLevel))}</pre><div class="prompt-quality"><span>Spontané</span><div><i style="width:${Math.max(10,(component.promptLevel/6)*100)}%"></i></div><span>Structuré</span></div><div class="prompt-mini-tips"><span>Préciser le public</span><span>Définir le format</span><span>Demander les sources</span><span>Dire quoi exclure</span></div></div></div></article>`;
 }
 
-const toolUses={
-  'Chat':['Question rapide, brouillon, reformulation ou brainstorming.','Moins adapté si le besoin doit garder beaucoup de contexte.'],
-  'Espace de travail':['Sujet suivi dans le temps avec plusieurs documents.','Inutile pour une question très simple.'],
-  'GPT / Assistant documentaire':['Besoin récurrent avec consignes stables ou questions sur un corpus interne.','À utiliser avec des sources fiables et bien gouvernées.'],
-  'Workflow':['Processus répétitif et stable.','À éviter si le processus change encore trop souvent.']
-};
-function slideToolLandscape(){
-  const current=component.toolUse||'Chat', info=toolUses[current];
-  return `<article class="slide tool-v6"><div class="eyebrow">Quel outil IA pour quel besoin ?</div><h2>Le bon outil, au bon moment.</h2><div class="tool-landscape tool-landscape-v5"><div class="tool-menu tool-menu-v5">${Object.keys(toolUses).map(k=>`<button class="${current===k?'active':''}" data-tool-use="${esc(k)}"><strong>${esc(k)}</strong></button>`).join('')}</div><div class="tool-detail tool-detail-v5"><span class="panel-label">${esc(current)}</span><h3>${esc(info[0])}</h3><p>${esc(info[1])}</p>${current==='GPT / Assistant documentaire'?'<div class="example-pills big-pills"><span>Supplier Quote</span><span>Méthodologie Cookstove</span><span>Base documentaire</span></div>':''}<div class="tool-note">Toujours partir du besoin, puis choisir l’outil.</div></div></div></article>`;
+function slideToolCases(){
+  const cases=[
+    {
+      n:'01',
+      title:'5 supplier PDFs + one email to draft',
+      body:'« Find the correct delivery date across 5 documents, then draft an email with the right date and the key points. »',
+      tools:['Simple chat','Project / folder space','Document assistant','Workflow'],
+      why:'Tricky point: the task mixes retrieval across a corpus + synthesis + rédaction.'
+    },
+    {
+      n:'02',
+      title:'Need the latest market signal for today',
+      body:'« Before a client meeting, give me the latest carbon-market headline, a quick interpretation and 3 bullets for the discussion. »',
+      tools:['Simple chat','Web / deep research','Project / folder space','Workflow'],
+      why:'Tricky point: you need recent external information, not just a model answer.'
+    }
+  ];
+  return `<article class="slide tool-cases-slide"><div class="eyebrow">Type de requête → choix de l’outil</div><h2>Deux cas un peu tricky à débattre ensemble.</h2><div class="tool-cases-grid">${cases.map(c=>`<div class="tool-case-card"><div class="tool-case-head"><span>${c.n}</span><h3>${c.title}</h3></div><p class="tool-case-body">${c.body}</p><div class="tool-options-row">${c.tools.map(t=>`<span>${t}</span>`).join('')}</div><div class="tool-case-why"><b>Question :</b> quel outil utiliseriez-vous en premier, et pourquoi ?<small>${c.why}</small></div></div>`).join('')}</div><div class="tool-discussion-band"><strong>Animation conseillée</strong><span>Faites verbaliser le besoin avant de parler d’outil : recherche web ? corpus documentaire ? simple rédaction ? répétition automatisable ?</span></div></article>`;
 }
 
 function slideAgents(){
@@ -478,7 +538,7 @@ function renderParticipantInteraction(id){
   if(submitted[id] && def.type!=='multi') return renderSubmitted(id,def);
   const current=selected[id];
   let input='';
-  if(def.type==='text') input=`<textarea class="mobile-textarea" id="ideaText" maxlength="200" placeholder="Une idée, en une phrase…">${esc(current||'')}</textarea><div class="char-count"><span id="charCount">${String(current||'').length}</span>/200</div>`;
+  if(def.type==='text') input=`<textarea class="mobile-textarea" id="ideaText" maxlength="${Number(def.maxLength)||200}" placeholder="${esc(def.placeholder||'Une idée, en une phrase…')}">${esc(current||'')}</textarea><div class="char-count"><span id="charCount">${String(current||'').length}</span>/${Number(def.maxLength)||200}</div>`;
   else input=`<div class="choice-list">${def.options.map(([key,label])=>{const isSel=def.type==='multi'?(current||[]).includes(key):current===key;return `<button class="choice ${isSel?'selected':''}" data-choice="${key}">${esc(label)}</button>`}).join('')}</div>`;
   return `<div class="mobile-panel"><div class="eyebrow">Question live</div><h1>${esc(def.question)}</h1>${input}<button class="btn primary mobile-submit" id="submitAnswer" ${!current || (Array.isArray(current)&&!current.length)?'disabled':''}>Envoyer ma réponse</button></div>`;
 }

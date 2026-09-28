@@ -771,3 +771,42 @@ body{font-family:"Montserrat","Arial",sans-serif}
 .pptx-reference-slide img{display:block;width:100%;height:100%;object-fit:fill}
 .stage:has(.pptx-reference-slide){border-radius:0!important;background:#FFFFFF!important}
 .stage:has(.pptx-reference-slide) .stage-nav{bottom:18px}
+
+/* --- Custom slides for trimmed deck --- */
+.associations-grid{display:grid;grid-template-columns:320px 1fr;gap:28px;align-items:stretch}
+.association-side,.cloud-panel,.tool-case-card,.tool-discussion-band{background:#FFFFFF!important;border:1px solid #D9DEE7!important;border-radius:4px!important;box-shadow:none!important}
+.association-side{padding:24px;display:flex;flex-direction:column;gap:18px}
+.association-lead{font-size:19px;line-height:1.45;color:#2F4062!important}
+.association-notes{display:grid;grid-template-columns:1fr;gap:12px}
+.note-chip{display:flex;gap:14px;align-items:center;padding:14px 16px;background:#F7F8FA;border:1px solid #E1E5EB;border-radius:3px}
+.note-chip b{font-size:22px;color:#2F4062!important}
+.note-chip span,.association-help p,.cloud-foot,.cloud-head small{color:#667085!important}
+.association-help{padding:16px;background:#EDF3FF;border:1px solid #C4D6FF;border-radius:3px;color:#2F4062!important}
+.association-help strong,.cloud-head span{color:#2F4062!important}
+.cloud-panel{padding:22px 24px;display:flex;flex-direction:column;justify-content:space-between;gap:18px}
+.cloud-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end}
+.word-cloud{display:flex;flex-wrap:wrap;gap:14px 16px;align-content:flex-start;min-height:280px;padding:18px 4px}
+.cloud-word{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:999px;background:#EDF3FF;border:1px solid #C4D6FF;color:#2F4062!important;transform:rotate(var(--rot,0deg));line-height:1.1}
+.cloud-word.level-1{font-size:18px}.cloud-word.level-2{font-size:22px}.cloud-word.level-3{font-size:28px}.cloud-word.level-4{font-size:34px}.cloud-word.level-5{font-size:40px;font-weight:700}
+.cloud-word.ghost{opacity:.8;background:#F7F8FA;border-style:dashed}
+.time-focus-slide .annualized.big{font-size:18px;font-weight:700;padding:12px 16px}
+.tool-cases-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:10px}
+.tool-case-card{padding:24px;display:flex;flex-direction:column;gap:16px}
+.tool-case-head{display:flex;gap:14px;align-items:flex-start}
+.tool-case-head span{display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:36px;background:#719EF7;color:#fff;border-radius:4px;font-weight:700}
+.tool-case-head h3{margin:0;font-size:24px;color:#2F4062!important;line-height:1.2}
+.tool-case-body{margin:0;color:#2F4062!important;font-size:18px;line-height:1.45}
+.tool-options-row{display:flex;flex-wrap:wrap;gap:10px}
+.tool-options-row span{padding:8px 12px;background:#EDF8F2;border:1px solid #B7DDC8;border-radius:999px;color:#2F4062!important;font-size:14px}
+.tool-case-why{display:flex;flex-direction:column;gap:8px;padding:14px 16px;background:#F7F8FA;border:1px solid #E1E5EB;border-radius:3px;color:#2F4062!important}
+.tool-case-why small{color:#667085!important}
+.tool-discussion-band{margin-top:18px;padding:16px 20px;display:flex;gap:16px;align-items:flex-start}
+.tool-discussion-band strong{color:#2F4062!important;white-space:nowrap}
+.tool-discussion-band span{color:#667085!important}
+.carbon-doc-quiz .fake-doc{padding:22px 24px}
+.carbon-doc .doc-lines{display:grid;gap:6px;margin-top:14px}
+.carbon-doc .doc-lines p{margin:0;font-size:14px;line-height:1.35;color:#475467!important}
+.carbon-doc .hidden-fact{margin-top:18px}
+@media (max-width: 1100px){
+  .associations-grid,.tool-cases-grid{grid-template-columns:1fr}
+}
