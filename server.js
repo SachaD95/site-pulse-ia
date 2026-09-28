@@ -16,7 +16,7 @@ const sseClients = new Map();
 const interactionDefinitions = {
   frequency: {
     type: 'single',
-    question: "À quelle fréquence utilisez-vous l’IA ?",
+    question: "Fréquence d’utilisation de l’IA ?",
     options: [
       ['rarely', 'Rarement'],
       ['daily1', 'Environ 1 fois par jour'],
@@ -26,7 +26,7 @@ const interactionDefinitions = {
   },
   timeSaved: {
     type: 'single',
-    question: "Combien de temps avez-vous l’impression que l’IA vous fait gagner chaque jour ?",
+    question: "Temps gagné avec l’IA chaque jour ?",
     options: [
       ['min10', 'Environ 10 min / jour'],
       ['min30', 'Environ 30 min / jour'],
@@ -36,7 +36,7 @@ const interactionDefinitions = {
   },
   appetite: {
     type: 'single',
-    question: "J’aimerais automatiser davantage certaines tâches avec l’IA.",
+    question: "Envie d’automatiser davantage ?",
     options: [
       ['no', 'Pas spécialement'],
       ['some', 'Oui, quelques tâches'],
@@ -46,7 +46,7 @@ const interactionDefinitions = {
   },
   priorities: {
     type: 'multi',
-    question: "Qu’aimeriez-vous automatiser en priorité ?",
+    question: "À automatiser en priorité ?",
     options: [
       ['meetings', 'Comptes-rendus de réunions'],
       ['emails', 'Emails'],
@@ -62,7 +62,7 @@ const interactionDefinitions = {
   },
   retrievalCheck: {
     type: 'single',
-    question: "Dans un assistant documentaire basé sur la recherche de passages, cette information sera-t-elle forcément retrouvée ?",
+    question: "Cette information sera-t-elle retrouvée ?",
     options: [
       ['yes', 'Oui, forcément'],
       ['no', 'Non, pas forcément']
@@ -71,7 +71,7 @@ const interactionDefinitions = {
   },
   nextPriority: {
     type: 'single',
-    question: "Quelle priorité IA devrions-nous approfondir ensuite ?",
+    question: "Quelle priorité approfondir ?",
     options: [
       ['supplierQuote', 'Supplier Quote'],
       ['cookstove', 'Assistant méthodologie cookstove'],

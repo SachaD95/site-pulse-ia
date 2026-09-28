@@ -1,4 +1,4 @@
-# AI Pulse v5 — Removall & IA
+# AI Pulse v8 — Removall & IA
 
 Présentation interactive + questionnaire live pour atelier interne Removall Carbon.
 
@@ -52,3 +52,9 @@ Les mêmes documents sont disponibles dans `public/docs/` afin d’être ouverts
 ## Confidentialité
 
 Aucun nom ni e-mail n’est demandé. Les réponses sont associées uniquement à un identifiant anonyme local par session.
+
+
+## v8
+
+- Charte graphique harmonisée sur le style Removall du fichier PowerPoint fourni.
+- Ajout de deux slides finales : Process d’intégration et Planning utilisation IA.
