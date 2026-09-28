@@ -576,3 +576,198 @@ html,body{background:#EAF1FB;color:#24304F;}
 .participant-shell{background:linear-gradient(135deg,#EAF1FB,#F6F9FF)}.mobile-panel{background:#FFFFFF;color:#24304F;border-color:#DDE8F7}.mobile-panel h1{color:#24304F}.mobile-panel p,.privacy-note,.session-mini{color:#5B667C}.choice{background:#F2F7FF;color:#24304F;border-color:#DDE8F7}.choice.selected,.choice:hover{background:#EEF3FF;border-color:#5F89F4}.reaction-bar{background:rgba(255,255,255,.84);border-color:#DDE8F7}.reaction-bar button{background:#EEF3FF}
 .imported-removall-slide{justify-content:flex-start;background:linear-gradient(135deg,#FFFFFF 0%,#F7FAFF 72%,#EEF5FF 100%)}.imported-removall-slide::after{display:none}.rc-doc-header{padding-top:6px;border-bottom:2px solid #5F89F4;padding-bottom:14px;margin-bottom:34px}.rc-doc-header h2{font-size:40px;margin:0;color:#24304F}.rc-footer{position:absolute;left:34px;right:34px;bottom:18px;display:flex;align-items:center;justify-content:space-between;color:#8994A9;font-size:9px}.rc-footer b{font-size:14px;color:#24304F}.process-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:34px}.process-card{min-height:250px;border-radius:18px;padding:28px;display:flex;flex-direction:column;justify-content:space-between}.process-card span{font-weight:900;color:#5F89F4}.process-card h3{font-size:32px}.process-card p{font-size:18px}.process-card.blue{border-top:5px solid #5F89F4!important}.process-line{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:26px}.process-line i{height:6px;border-radius:999px;background:linear-gradient(90deg,#5F89F4,#B7CBFF)}.planning-board{margin-top:8px}.planning-nav{display:flex;gap:12px;margin-bottom:26px}.planning-nav span{padding:10px 22px;border-radius:999px;background:#EEF3FF;color:#5F89F4;font-weight:800}.planning-nav .active{background:#5F89F4;color:white}.timeline-v8{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;position:relative}.timeline-v8::before{content:'';position:absolute;left:6%;right:6%;top:38px;height:3px;background:#B7CBFF}.timeline-col{position:relative;min-height:370px;border-radius:18px;padding:70px 20px 20px}.timeline-dot{position:absolute;top:19px;left:20px;width:40px;height:40px;border-radius:50%;background:#5F89F4;color:white;display:grid;place-items:center;font-weight:900;z-index:2}.timeline-col h3{font-size:24px;margin:0 0 8px}.timeline-col strong{color:#FE6930;font-size:15px}.timeline-col ul{margin:16px 0 0;padding-left:18px;color:#5B667C;line-height:1.55;font-size:14px}
 @media (max-width:1100px){.process-grid,.timeline-v8{grid-template-columns:1fr 1fr}.timeline-v8::before{display:none}}
+/* ===== V9 · Charte stricte issue de testCharteGraphique.pptx =====
+   Palette du PPTX : navy #2F4062, bleu #719EF7, bleu clair #C4D6FF,
+   vert #4BBA84, orange #FE6930, jaune #FFD966, fonds blanc / gris clair.
+   Style volontairement plat : aucun dégradé décoratif, aucun glassmorphism. ===== */
+:root{
+  --bg:#E7E6E6;
+  --panel:#FFFFFF;
+  --panel-2:#F4F6F9;
+  --line:#D9DEE7;
+  --text:#2F4062;
+  --muted:#667085;
+  --cyan:#719EF7;
+  --blue:#719EF7;
+  --orange:#FE6930;
+  --green:#4BBA84;
+  --yellow:#FFD966;
+  --danger:#FE6930;
+  --shadow:none;
+  --radius:4px;
+  font-family:"Montserrat","Arial",sans-serif;
+}
+html,body{background:#E7E6E6!important;color:#2F4062!important}
+body{font-family:"Montserrat","Arial",sans-serif}
+
+/* Entrée / navigation générale */
+.app-shell{background:#E7E6E6}
+.role-gate{background:#FFFFFF!important;border:1px solid #CDD3DE!important;border-radius:4px!important;box-shadow:none!important;color:#2F4062}
+.role-gate h1{color:#2F4062;letter-spacing:-.03em}
+.role-gate p{color:#667085}
+.eyebrow{color:#719EF7!important;letter-spacing:.10em;font-weight:700}
+.btn{border:1px solid #C8CED8!important;border-radius:4px!important;background:#FFFFFF!important;color:#2F4062!important;box-shadow:none!important;transform:none!important}
+.btn:hover{background:#F2F5FA!important;border-color:#719EF7!important;color:#2F4062!important}
+.btn.primary{background:#719EF7!important;border-color:#719EF7!important;color:#FFFFFF!important;box-shadow:none!important}
+.btn.primary:hover{background:#5F89F4!important;color:#FFFFFF!important}
+.btn.secondary{background:#FFFFFF!important}
+.btn.danger{background:#FFF2EC!important;color:#A64420!important;border-color:#F5B297!important}
+
+/* Cadre de présentation */
+.presenter-layout{background:#E7E6E6!important}
+.stage{background:#FFFFFF!important;border:1px solid #C8CED8!important;border-radius:4px!important;box-shadow:none!important;color:#2F4062}
+.stage::before{display:none!important;background:none!important;mask-image:none!important}
+.slide{background:#FFFFFF;color:#2F4062;padding:clamp(42px,5vw,66px) clamp(54px,6vw,82px) clamp(48px,5vw,68px)}
+.slide::after{content:'© REMOVALL, All rights reserved - Confidential';left:30px;bottom:14px;color:#8A8F99;font-size:8px;font-family:Arial,sans-serif}
+.slide h1,.slide h2,.slide h3{font-family:"Montserrat","Arial",sans-serif;letter-spacing:-.025em}
+.slide h1{color:#2F4062}
+.slide h1 span,.slide h2{color:#719EF7!important}
+.slide h2{font-size:clamp(34px,3.7vw,52px);font-weight:700}
+.slide h3{color:#2F4062}
+.slide p,.big-sub{color:#667085!important}
+.glow-text{background:none!important;color:#2F4062!important;-webkit-background-clip:initial;background-clip:initial}
+.stage-footer{color:#737B8C}
+.progress{background:#DCE2EC!important;border-radius:0!important}
+.progress>i{background:#719EF7!important;border-radius:0!important}
+.stage-nav .btn{background:#FFFFFF!important;color:#2F4062!important}
+
+/* Panneau présentateur : fond marine du PPTX, sans effets */
+.presenter-panel{background:#2F4062!important;color:#FFFFFF!important;border:1px solid #2F4062!important;border-radius:4px!important;box-shadow:none!important;backdrop-filter:none!important}
+.presenter-panel .panel-label,.presenter-panel .panel-metric,.presenter-panel small{color:#C4D6FF!important}
+.presenter-panel .panel-metric b{color:#FFFFFF!important}
+.presenter-panel .session-chip,.presenter-panel .btn{background:#FFFFFF!important;color:#2F4062!important;border-color:#D9DEE7!important;border-radius:4px!important}
+.presenter-panel .btn.primary{background:#719EF7!important;color:#FFFFFF!important;border-color:#719EF7!important}
+.presenter-panel .btn.danger{background:#FFF2EC!important;color:#A64420!important;border-color:#F5B297!important}
+.presenter-panel .panel-section{border-color:rgba(255,255,255,.20)!important}
+.status-dot,.live-badge i{background:#4BBA84!important;box-shadow:none!important}
+
+/* Intro */
+.brand-lockup span{color:#2F4062!important}.brand-lockup small{color:#719EF7!important}
+.brand-lockup img{border-radius:0!important}
+.qr-card,.light-card{background:#FFFFFF!important;color:#2F4062!important;border:1px solid #D9DEE7!important;border-radius:4px!important;box-shadow:none!important}
+.hero-mini-tags span{background:#EDF3FF!important;border-color:#C4D6FF!important;color:#2F4062!important;border-radius:2px!important}
+
+/* Cartes / grilles : aplats, traits fins, pas de verre ni d'ombres */
+.feature-card,.glass-card,.kpi,.prompt-card,.tool-detail,.fake-doc,.quiz-side,.source-copy,.process-card,.timeline-col,.focus-panel,.research-visual-card,.orbit-card,.selected-project,.ai-main-card,.ai-side-card,.model-blackbox,.ml-card,.prompt-output-card{
+  background:#FFFFFF!important;
+  color:#2F4062!important;
+  border:1px solid #D9DEE7!important;
+  border-radius:4px!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+}
+.feature-card p,.glass-card p,.kpi span,.source-copy p,.research-visual-card p,.research-visual-card small,.tool-detail-v5 p,.ai-main-card p,.ai-side-card p,.model-blackbox p,.ml-card p{color:#667085!important}
+.objective-grid-v6 .feature-card{border-top-width:4px!important}
+.objective-grid-v6 .objective-1{border-top-color:#4BBA84!important}
+.objective-grid-v6 .objective-2{border-top-color:#719EF7!important}
+.objective-grid-v6 .objective-3{border-top-color:#FE6930!important}
+.mini-illustration{background:#EDF3FF!important;color:#2F4062!important;border:1px solid #C4D6FF!important;border-radius:4px!important}
+
+/* Sondages et résultats */
+.live-badge{background:#EDF8F2!important;border:1px solid #B7DDC8!important;color:#2F4062!important;border-radius:2px!important}
+.poll-option-card{background:#FFFFFF!important;border:1px solid #D9DEE7!important;border-radius:3px!important;box-shadow:none!important}
+.poll-option-card strong,.response-count,.result-row b,.result-row label{color:#2F4062!important}
+.placeholder-results{background:#F7F8FA!important;border:1px dashed #BFC6D2!important;border-radius:4px!important;color:#667085!important}
+.placeholder-results strong{color:#2F4062!important}
+.bar,.mini-bar,.gauge-line,.maturity-track{background:#E1E5EB!important;border-radius:0!important}
+.bar i,.mini-bar i,.gauge-line i,.maturity-track i{background:#719EF7!important;border-radius:0!important}
+.rank-item{border-color:#E0E4EA!important}
+.rank-dot{background:#719EF7!important;box-shadow:none!important}
+.focus-icon{background:#719EF7!important;color:#FFFFFF!important;border:0!important;border-radius:2px!important}
+.annualized{background:#EDF8F2!important;color:#2F4062!important;border-color:#B7DDC8!important;border-radius:2px!important}
+
+/* Donuts : segments pleins de la palette, sans fondu visuel */
+.donut,.mini-donut,.mini-ring,.gauge{box-shadow:none!important}
+.donut::after,.mini-donut::after{background:#FFFFFF!important}
+.donut span,.donut-legend span,.donut-legend b,.retrieval-legend{color:#2F4062!important}
+.appetite-gradient-scale>div{background:#719EF7!important;border-radius:0!important}
+
+/* Loupe temps gagné */
+.research-visual-card::after{display:none!important}
+.research-visual-card{border-top-width:3px!important}
+.study-1{border-top-color:#2F4062!important}.study-2{border-top-color:#719EF7!important}.study-3{border-top-color:#4BBA84!important}.study-4{border-top-color:#FE6930!important}
+.research-visual-card strong,.research-visual-card b{color:#2F4062!important}
+.study-tag{color:#2F4062!important}
+.truth-v5{background:#EDF8F2!important;border:1px solid #B7DDC8!important;border-radius:2px!important;color:#2F4062!important}
+.truth-v5 span{color:#2F4062!important}
+
+/* Explication IA */
+.flow-node{background:#FFFFFF!important;border:1px solid #D9DEE7!important;color:#2F4062!important;border-radius:3px!important;box-shadow:none!important;transform:none!important}
+.flow-node.active,.flow-node:hover{background:#719EF7!important;color:#FFFFFF!important;border-color:#719EF7!important}
+.flow-arrow{color:#2F4062!important}
+.flow-mini-points span{background:#EDF3FF!important;color:#2F4062!important;border:1px solid #C4D6FF!important;border-radius:2px!important}
+.explain-box{background:#EDF3FF!important;border:1px solid #C4D6FF!important;color:#2F4062!important;border-radius:3px!important}
+.model-blackbox{border-left:4px solid #2F4062!important}.ml-card{border-left:4px solid #719EF7!important}
+
+/* Démo documentaire */
+.doc-head{color:#737B8C!important;border-color:#D9DEE7!important}
+.fake-doc p,.fake-doc h4,.fake-doc span{color:#667085!important}
+.hidden-fact{background:#FFF2EC!important;border:1px solid #F5B297!important;border-radius:2px!important}
+.hidden-fact b,.question-small{color:#2F4062!important}
+.spoiler{background:#EDF8F2!important;border:1px solid #B7DDC8!important;border-radius:2px!important;color:#2F4062!important}
+.spoiler p,.spoiler small,.spoiler b{color:#2F4062!important}
+
+/* Prompt Lab */
+.prompt-free{background:#FFFFFF!important;border:1px solid #D9DEE7!important;border-left:4px solid #719EF7!important;border-radius:2px!important;box-shadow:none!important}
+.prompt-free p{color:#2F4062!important}
+.stage .prompt-part{background:#FFFFFF!important;border:1px solid #D9DEE7!important;color:#2F4062!important;border-radius:3px!important;box-shadow:none!important}
+.stage .prompt-part small{color:#667085!important}
+.stage .prompt-part>span{background:#EDF3FF!important;color:#2F4062!important;border-radius:2px!important}
+.stage .prompt-part.on{background:#EDF3FF!important;border-color:#719EF7!important}
+.stage .prompt-part.on>span{background:#719EF7!important;color:#FFFFFF!important}
+.stage .prompt-part.final-step.on{background:#2F4062!important;color:#FFFFFF!important;border-color:#2F4062!important}
+.stage .prompt-part.final-step.on small{color:#C4D6FF!important}
+.stage .prompt-output-card{background:#FFFFFF!important}
+.stage .prompt-output{color:#2F4062!important}
+.prompt-quality>div{background:#D9DEE7!important;border-radius:0!important}
+.prompt-mini-tips span{background:#EDF8F2!important;color:#2F4062!important;border-color:#B7DDC8!important;border-radius:2px!important}
+
+/* Outils */
+.stage .tool-menu-v5 button{background:#FFFFFF!important;border:1px solid #D9DEE7!important;color:#2F4062!important;border-radius:3px!important;box-shadow:none!important}
+.stage .tool-menu-v5 button.active{background:#719EF7!important;color:#FFFFFF!important;border-color:#719EF7!important}
+.tool-detail-v5 h3{color:#2F4062!important}
+.stage .tool-note{background:#EDF3FF!important;border:1px solid #C4D6FF!important;color:#2F4062!important;border-radius:2px!important}
+.big-pills span,.example-pills span{background:#EDF8F2!important;color:#2F4062!important;border-color:#B7DDC8!important;border-radius:2px!important}
+
+/* Priorités / conclusion / source */
+.orbit-card,.selected-project{border-color:#D9DEE7!important}
+.orbit-card b,.selected-project h3{color:#2F4062!important}.orbit-card span,.selected-project span{color:#719EF7!important}
+.selection-line{background:#719EF7!important;height:2px!important}
+.final-v5 .final-reveal{color:#2F4062!important}.final-subtitle{color:#719EF7!important}
+.stage .loop-row span{background:#FFFFFF!important;border-color:#D9DEE7!important;color:#2F4062!important;border-radius:2px!important}
+.source-slide .doc-preview{background:#FFFFFF!important;border-color:#D9DEE7!important;border-radius:2px!important}
+.source-actions .btn.secondary{background:#FFFFFF!important;color:#2F4062!important;border-color:#D9DEE7!important}
+
+/* Vue participant, cohérente avec la même charte */
+.participant-shell{background:#E7E6E6!important;color:#2F4062!important}
+.mobile-head{color:#2F4062!important}
+.mobile-panel{background:#FFFFFF!important;color:#2F4062!important;border:1px solid #D9DEE7!important;border-radius:4px!important;box-shadow:none!important;backdrop-filter:none!important}
+.mobile-panel h1{color:#2F4062!important}.mobile-panel p,.privacy-note,.session-mini{color:#667085!important}
+.choice{background:#FFFFFF!important;color:#2F4062!important;border:1px solid #D9DEE7!important;border-radius:3px!important}
+.choice.selected,.choice:hover{background:#EDF3FF!important;border-color:#719EF7!important}
+.mobile-textarea{background:#FFFFFF!important;color:#2F4062!important;border:1px solid #D9DEE7!important;border-radius:3px!important}
+.mobile-textarea:focus{border-color:#719EF7!important}
+.reaction-bar{background:#FFFFFF!important;border:1px solid #D9DEE7!important;border-radius:4px!important;backdrop-filter:none!important}
+.reaction-bar button{background:#F2F4F7!important;border-radius:3px!important}
+.vote-item{background:#FFFFFF!important;border-color:#D9DEE7!important;border-radius:3px!important}.vote-item p{color:#2F4062!important}
+.wait-orb{background:#C4D6FF!important;border:1px solid #719EF7!important;box-shadow:none!important}
+.success-mark{background:#EDF8F2!important;border-color:#B7DDC8!important;color:#2F4062!important}
+.toast{background:#2F4062!important;color:#FFFFFF!important;border-color:#2F4062!important;border-radius:3px!important;box-shadow:none!important}
+
+/* Supprime les derniers effets décoratifs hérités */
+.agent-flow .flow-node::after{display:none!important}
+.workspace-core,.role-tab.active,.compare-card.specialized,.transcript,.notes-output,.idea-card,.group-card,.medal-row{background:#FFFFFF!important;border-color:#D9DEE7!important;box-shadow:none!important;backdrop-filter:none!important}
+.workspace-core,.transcript,.notes-output,.idea-card,.group-card,.medal-row,.compare-card{border-radius:4px!important}
+.role-tab,.block-chip,.note-tabs button,.shortlist-btn{border-radius:3px!important}
+.role-tab.active,.block-chip.on,.note-tabs button.active,.shortlist-btn.on{background:#719EF7!important;color:#FFFFFF!important;border-color:#719EF7!important}
+.idea-card p,.note-content ul,.example-list li{color:#2F4062!important}
+.example-list li{background:#F2F4F7!important;border-radius:2px!important}
+.timer-overlay{background:#2F4062!important;color:#FFFFFF!important;border-color:#2F4062!important;box-shadow:none!important;backdrop-filter:none!important}
+.demo-banner{background:#FFF2EC!important;border-color:#F5B297!important;color:#A64420!important;border-radius:2px!important}
+
+/* Les deux dernières slides sont les rendus exacts du PPTX source. */
+.pptx-reference-slide{padding:0!important;background:#FFFFFF!important;display:block!important;animation:none!important}
+.pptx-reference-slide::after{display:none!important}
+.pptx-reference-slide img{display:block;width:100%;height:100%;object-fit:fill}
+.stage:has(.pptx-reference-slide){border-radius:0!important;background:#FFFFFF!important}
+.stage:has(.pptx-reference-slide) .stage-nav{bottom:18px}

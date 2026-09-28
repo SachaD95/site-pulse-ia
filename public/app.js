@@ -23,7 +23,7 @@ const slideTitles = [
   'Introduction', 'Objectifs', 'Fréquence', 'Temps gagné', 'Automatisation', 'Priorités',
   'Synthèse', 'Loupe temps gagné', 'Comment ça marche ?', 'Info retrouvée ?', 'Prompt Lab',
   'Quel outil ?', 'Prochaines priorités', 'Conclusion', 'Document source',
-  'Process d’intégration', 'Planning utilisation IA'
+  'Planning utilisation IA', 'Removall Carbon'
 ];
 
 function getAnonId(sid){
@@ -157,7 +157,7 @@ function renderPresenter(){
           <button class="btn icon" id="prevSlide" aria-label="Précédent">←</button>
           <button class="btn icon" id="nextSlide" aria-label="Suivant">→</button>
         </div>
-        <div class="stage-footer"><span>${state.slideIndex+1}/${slideTitles.length}</span><div class="progress"><i style="width:${((state.slideIndex+1)/slideTitles.length)*100}%"></i></div><span>${esc(slideTitles[state.slideIndex])}</span></div>
+        ${state.slideIndex < slideTitles.length-2 ? `<div class="stage-footer"><span>${state.slideIndex+1}/${slideTitles.length}</span><div class="progress"><i style="width:${((state.slideIndex+1)/slideTitles.length)*100}%"></i></div><span>${esc(slideTitles[state.slideIndex])}</span></div>` : ''}
       </div>
     </section>
     ${renderPresenterPanel()}
@@ -435,17 +435,11 @@ function slideSourceDocument(){
 
 
 function slideIntegrationProcess(){
-  return `<article class="slide imported-removall-slide process-slide"><div class="rc-doc-header"><h2>Process d’intégration</h2></div><div class="process-grid"><div class="process-card blue"><span>01</span><h3>Accueil</h3><p>Créer un premier repère clair.</p></div><div class="process-card"><span>02</span><h3>Formation</h3><p>Installer les bonnes pratiques.</p></div><div class="process-card"><span>03</span><h3>Suivi</h3><p>Mesurer, ajuster, progresser.</p></div></div><div class="process-line"><i></i><i></i><i></i></div><div class="rc-footer"><span>© REMOVALL, All rights reserved - Confidential</span><b>16</b></div></article>`;
+  return `<article class="slide pptx-reference-slide"><img src="/assets/pptx-slide-1.png" alt="Planning utilisation IA — slide originale"></article>`;
 }
 
 function slideAIPlanning(){
-  const steps=[
-    ['Pré-intégration','S-1',['Communication équipe','Envoi pack','Préparer espace de travail']],
-    ['Arrivée','J1',['Programme parrainage','Présentation équipe & locaux','Présentation vision & histoire','Déjeuner','Temps manager']],
-    ['Rapport d’étonnement','S1 à 3',['Rencontre parrainage','Point mi-période','Points réguliers']],
-    ['Formation','S4',['Point fin période','Rapport d’étonnement','Fin période d’essai']]
-  ];
-  return `<article class="slide imported-removall-slide planning-slide"><div class="rc-doc-header"><h2>Planning utilisation IA</h2></div><div class="planning-board"><div class="planning-nav"><span class="active">Accueil</span><span>Formation</span></div><div class="timeline-v8">${steps.map((s,i)=>`<div class="timeline-col"><div class="timeline-dot">${i+1}</div><h3>${s[0]}</h3><strong>${s[1]}</strong><ul>${s[2].map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('')}</div></div><div class="rc-footer"><span>© REMOVALL, All rights reserved - Confidential</span><b>17</b></div></article>`;
+  return `<article class="slide pptx-reference-slide"><img src="/assets/pptx-slide-2.png" alt="Removall Carbon — slide originale"></article>`;
 }
 
 function bindSlideEvents(){
