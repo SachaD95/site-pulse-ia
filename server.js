@@ -13,75 +13,33 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 const DATA_FILE = path.join(__dirname, 'data', 'sessions.json');
 const sseClients = new Map();
 
+const SLIDE_COUNT = 5;
+
 const interactionDefinitions = {
-  frequency: {
-    type: 'single',
-    question: "À quelle fréquence utilisez-vous l’IA ?",
-    options: [
-      ['rarely', 'Rarement'],
-      ['daily1', 'Environ 1 fois par jour'],
-      ['daily5', 'Environ 5 fois par jour'],
-      ['daily10', 'Plus de 10 fois par jour']
-    ]
+  associations: {
+    type: 'text',
+    question: 'What comes to mind when you think about AI?',
+    placeholder: 'Type one word or short phrase...',
+    maxLength: 80
   },
   timeSaved: {
     type: 'single',
-    question: "Combien de temps avez-vous l’impression que l’IA vous fait gagner chaque jour ?",
+    question: 'How many hours does AI save you per week?',
     options: [
-      ['min10', 'Environ 10 min / jour'],
-      ['min30', 'Environ 30 min / jour'],
-      ['hour1', 'Environ 1 h / jour'],
-      ['hours', 'Plusieurs heures / jour']
-    ]
-  },
-  appetite: {
-    type: 'single',
-    question: "J’aimerais automatiser davantage certaines tâches avec l’IA.",
-    options: [
-      ['no', 'Pas spécialement'],
-      ['some', 'Oui, quelques tâches'],
-      ['more', 'Beaucoup plus'],
-      ['allin', 'Absolument 🚀']
-    ]
-  },
-  priorities: {
-    type: 'multi',
-    question: "Qu’aimeriez-vous automatiser en priorité ?",
-    options: [
-      ['meetings', 'Comptes-rendus de réunions'],
-      ['emails', 'Emails'],
-      ['research', 'Recherche documentaire'],
-      ['excel', 'Excel / reporting'],
-      ['slides', 'Création de présentations'],
-      ['docs', 'Analyse de documents'],
-      ['chatbot', 'Chatbot interne'],
-      ['prep', 'Préparation de réunions'],
-      ['repetitive', 'Tâches répétitives'],
-      ['other', 'Autre']
+      ['h1', '1 hour / week'],
+      ['h2', '2 hours / week'],
+      ['h4', '4 hours / week'],
+      ['h8', '8 hours / week']
     ]
   },
   retrievalCheck: {
     type: 'single',
-    question: "Dans un assistant documentaire basé sur la recherche de passages, cette information sera-t-elle forcément retrouvée ?",
+    question: 'Will the chat find the correct delivery date?',
     options: [
-      ['yes', 'Oui, forcément'],
-      ['no', 'Non, pas forcément']
+      ['yes', 'Yes, definitely'],
+      ['no', 'No, not necessarily']
     ],
     correct: 'no'
-  },
-  nextPriority: {
-    type: 'single',
-    question: "Quelle priorité IA devrions-nous approfondir ensuite ?",
-    options: [
-      ['supplierQuote', 'Supplier Quote'],
-      ['cookstove', 'Assistant méthodologie cookstove'],
-      ['meetingNotes', 'Meeting Notes automatiques'],
-      ['docSearch', 'Recherche documentaire interne'],
-      ['reporting', 'Reporting / Excel'],
-      ['meetingPrep', 'Préparation de réunions / rendez-vous'],
-      ['emails', 'Brouillons d’e-mails / communications'],
-      ['workflow', 'Workflow opérationnel répétitif']
-    ]
   }
 };
 
@@ -139,10 +97,10 @@ function newSession(id = defaultSessionId()) {
 
 if (!Object.keys(sessions).length) {
   const s = newSession();
-  console.log(`\nAI Pulse prêt.\nPrésentateur: http://localhost:${PORT}/?mode=presenter&session=${encodeURIComponent(s.id)}&key=${s.presenterKey}\nParticipant:  http://localhost:${PORT}/?mode=participant&session=${encodeURIComponent(s.id)}\n`);
+  console.log(`\nAI Pulse ready.\nPresenter: http://localhost:${PORT}/?mode=presenter&session=${encodeURIComponent(s.id)}&key=${s.presenterKey}\nParticipant:  http://localhost:${PORT}/?mode=participant&session=${encodeURIComponent(s.id)}\n`);
 } else {
   const s = Object.values(sessions)[0];
-  console.log(`\nAI Pulse prêt.\nPrésentateur: http://localhost:${PORT}/?mode=presenter&session=${encodeURIComponent(s.id)}&key=${s.presenterKey}\nParticipant:  http://localhost:${PORT}/?mode=participant&session=${encodeURIComponent(s.id)}\n`);
+  console.log(`\nAI Pulse ready.\nPresenter: http://localhost:${PORT}/?mode=presenter&session=${encodeURIComponent(s.id)}&key=${s.presenterKey}\nParticipant:  http://localhost:${PORT}/?mode=participant&session=${encodeURIComponent(s.id)}\n`);
 }
 
 function touch(session) {
@@ -178,21 +136,18 @@ function aggregateInteraction(session, id) {
 }
 
 function dashboard(session) {
-  const f = aggregateInteraction(session, 'frequency');
   const t = aggregateInteraction(session, 'timeSaved');
-  const a = aggregateInteraction(session, 'appetite');
-  const p = aggregateInteraction(session, 'priorities');
-  const daily = f.total ? Math.round(((f.counts.daily1 + f.counts.daily5 + f.counts.daily10) / f.total) * 100) : 0;
-  const wantsAuto = a.total ? Math.round(((a.counts.some + a.counts.more + a.counts.allin) / a.total) * 100) : 0;
-  const appetiteScore = a.total ? Math.round(((a.counts.some * 33 + a.counts.more * 67 + a.counts.allin * 100) / a.total)) : 0;
-  const freqScore = f.total ? Math.round(((f.counts.daily1 * 35 + f.counts.daily5 * 70 + f.counts.daily10 * 100) / f.total)) : 0;
-  const maturity = Math.round(freqScore * 0.6 + appetiteScore * 0.4);
-  const savedMinutes = t.total ? Math.round((t.counts.min10 * 10 + t.counts.min30 * 30 + t.counts.hour1 * 60 + t.counts.hours * 120) / t.total) : 0;
-  const avgMinutesSavedLabel = savedMinutes >= 60 ? `${(savedMinutes/60).toFixed(savedMinutes%60?1:0).replace('.',',')} h` : `${savedMinutes} min`;
-  const annualHoursSaved = Math.round(savedMinutes * 220 / 60);
-  const labels = Object.fromEntries((interactionDefinitions.priorities.options || []).map(([k, v]) => [k, v]));
-  const top = Object.entries(p.counts).sort((x,y) => y[1] - x[1]).slice(0,3).map(([id, count]) => ({ id, label: labels[id], count }));
-  return { daily, wantsAuto, appetiteScore, freqScore, maturity, top, savedMinutes, avgMinutesSavedLabel, annualHoursSaved };
+  const values = { h1:1, h2:2, h4:4, h8:8 };
+  let totalHours = 0;
+  for (const [key, value] of Object.entries(values)) totalHours += (t.counts[key] || 0) * value;
+  const averageWeeklyHours = t.total ? totalHours / t.total : 0;
+  const participantTotal = Object.keys(session.participants || {}).length;
+  const responders = new Set();
+  for (const answers of Object.values(session.responses || {})) {
+    for (const id of Object.keys(answers || {})) responders.add(id);
+  }
+  const participationRate = participantTotal ? Math.min(100, Math.round((responders.size / participantTotal) * 100)) : 0;
+  return { averageWeeklyHours, participantTotal, respondentTotal:responders.size, participationRate };
 }
 
 function publicState(session, presenter = false) {
@@ -291,21 +246,11 @@ function serveStatic(req, res, pathname) {
 
 function makeDemoResponses() {
   const ids = Array.from({length: 28}, (_,i) => `demo-${i+1}`);
-  const frequencyVals = ['rarely','daily1','daily1','daily5','daily5','daily5','daily10'];
-  const timeSavedVals = ['min10','min30','min30','hour1','hour1','hours','min30'];
-  const appetiteVals = ['no','some','some','more','more','allin','allin'];
-  const priorityVals = [
-    ['meetings','emails','prep'], ['excel','repetitive'], ['docs','research'], ['meetings','slides'],
-    ['emails','repetitive'], ['excel','docs','research'], ['meetings','prep','repetitive']
-  ];
-  const nextVals = ['supplierQuote','cookstove','meetingNotes','docSearch','reporting','meetingPrep','emails','workflow'];
+  const timeVals = ['h1','h2','h2','h4','h4','h8','h2'];
   return {
-    frequency: Object.fromEntries(ids.map((id,i) => [id, frequencyVals[i % frequencyVals.length]])),
-    timeSaved: Object.fromEntries(ids.map((id,i) => [id, timeSavedVals[i % timeSavedVals.length]])),
-    appetite: Object.fromEntries(ids.map((id,i) => [id, appetiteVals[i % appetiteVals.length]])),
-    priorities: Object.fromEntries(ids.map((id,i) => [id, priorityVals[i % priorityVals.length]])),
-    retrievalCheck: Object.fromEntries(ids.slice(0,24).map((id,i) => [id, i % 4 === 0 ? 'yes' : 'no'])),
-    nextPriority: Object.fromEntries(ids.slice(0,26).map((id,i) => [id, nextVals[(i*i + i) % nextVals.length]]))
+    associations: Object.fromEntries(ids.map((id,i) => [id, ['submitted']])),
+    timeSaved: Object.fromEntries(ids.map((id,i) => [id, timeVals[i % timeVals.length]])),
+    retrievalCheck: Object.fromEntries(ids.slice(0,24).map((id,i) => [id, i % 4 === 0 ? 'yes' : 'no']))
   };
 }
 
@@ -313,7 +258,8 @@ function loadDemo(session) {
   session.responses = makeDemoResponses();
   const demoIds = Array.from({length:28}, (_,i) => `demo-${i+1}`);
   demoIds.forEach((id,i) => session.participants[id] = Date.now() - i*1000);
-  session.ideas = [];
+  const demoWords = ['time saving','writing','automation','research','curiosity','productivity','time savings','analysis','risk','quality','prompt','market intelligence','email','meeting note','automation','research'];
+  session.ideas = demoWords.map((text, i) => ({ id:`idea-demo-${i+1}`, anonId:`demo-${i+1}`, text, createdAt:new Date().toISOString(), demo:true }));
   session.shortlistedIdeaIds = [];
   session.ideaVotes = {};
   session.demoLoaded = true;
@@ -321,17 +267,173 @@ function loadDemo(session) {
 
 function classifyIdeas(session) {
   const groups = [
-    ['Réunions', /réunion|meeting|compte.?rendu|brief|rendez-vous|rdv/i],
-    ['Reporting', /report|excel|tableau|kpi|donnée|dashboard/i],
-    ['Recherche', /recherche|chercher|document|procédure|veille/i],
-    ['Communication', /email|mail|message|réponse|communication/i],
-    ['Création de contenu', /présentation|slide|contenu|rédig|post|création/i],
-    ['Automatisation opérationnelle', /automatis|tâche|workflow|contrat|action|mise à jour/i]
+    ['Meetings', /meeting|minutes|brief|appointment/i],
+    ['Reporting', /report|excel|table|kpi|data|dashboard/i],
+    ['Research', /research|search|document|procedure|monitoring/i],
+    ['Communication', /email|mail|message|response|communication/i],
+    ['Content creation', /presentation|slide|content|write|post|creation/i],
+    ['Operational automation', /automat|task|workflow|contract|action|update/i]
   ];
   return groups.map(([label, re]) => ({
     label,
     ideas: session.ideas.filter(i => re.test(i.text)).map(i => i.id)
   })).filter(g => g.ideas.length);
+}
+
+
+function normalizeCloudPart(word) {
+  let w = String(word || '').toLowerCase().trim().replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, '');
+  if (w.length > 4 && w.endsWith('ies')) w = w.slice(0, -3) + 'y';
+  else if (w.length > 3 && w.endsWith('s') && !/(ss|us|is)$/.test(w)) w = w.slice(0, -1);
+  return w;
+}
+
+function normalizeCloudPhrase(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ').split(' ').map(normalizeCloudPart).filter(Boolean).join(' ');
+}
+
+function cloudSummary(session) {
+  const map = new Map();
+  for (const idea of session.ideas || []) {
+    const key = normalizeCloudPhrase(idea.text);
+    if (!key) continue;
+    map.set(key, (map.get(key) || 0) + 1);
+  }
+  return [...map.entries()].map(([label, count]) => ({ label, count })).sort((a,b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+function toPdfAscii(value) {
+  return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u2013\u2014]/g, '-').replace(/[^\x20-\x7E]/g, '?');
+}
+function pdfEscape(value) { return toPdfAscii(value).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)'); }
+
+class PdfBuilder {
+  constructor() { this.objects = []; }
+  reserve() { this.objects.push(null); return this.objects.length; }
+  set(id, data) { this.objects[id - 1] = Buffer.isBuffer(data) ? data : Buffer.from(String(data), 'binary'); }
+  stream(dict, content) {
+    const body = Buffer.isBuffer(content) ? content : Buffer.from(String(content), 'binary');
+    return Buffer.concat([Buffer.from(`<< ${dict} /Length ${body.length} >>\nstream\n`, 'binary'), body, Buffer.from('\nendstream', 'binary')]);
+  }
+  finish(rootId) {
+    const parts = [Buffer.from('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n', 'binary')];
+    const offsets = [0];
+    let offset = parts[0].length;
+    for (let i=0;i<this.objects.length;i++) {
+      offsets.push(offset);
+      const head = Buffer.from(`${i+1} 0 obj\n`, 'binary');
+      const body = this.objects[i] || Buffer.from('<<>>', 'binary');
+      const tail = Buffer.from('\nendobj\n', 'binary');
+      parts.push(head, body, tail);
+      offset += head.length + body.length + tail.length;
+    }
+    const xrefOffset = offset;
+    let xref = `xref\n0 ${this.objects.length+1}\n0000000000 65535 f \n`;
+    for (let i=1;i<offsets.length;i++) xref += `${String(offsets[i]).padStart(10,'0')} 00000 n \n`;
+    xref += `trailer\n<< /Size ${this.objects.length+1} /Root ${rootId} 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+    parts.push(Buffer.from(xref, 'binary'));
+    return Buffer.concat(parts);
+  }
+}
+
+function pdfText(cmds, text, x, y, size=12, bold=false, color=[0.184,0.251,0.384]) {
+  cmds.push(`${color[0]} ${color[1]} ${color[2]} rg BT /${bold?'F2':'F1'} ${size} Tf 1 0 0 1 ${x} ${y} Tm (${pdfEscape(text)}) Tj ET`);
+}
+function pdfRect(cmds, x, y, w, h, fill) {
+  cmds.push(`${fill[0]} ${fill[1]} ${fill[2]} rg ${x} ${y} ${w} ${h} re f`);
+}
+function pdfLine(cmds, x1, y1, x2, y2, stroke=[0.86,0.89,0.94], width=1) {
+  cmds.push(`${stroke[0]} ${stroke[1]} ${stroke[2]} RG ${width} w ${x1} ${y1} m ${x2} ${y2} l S`);
+}
+
+function liveResultsContent(session) {
+  const cmds = [];
+  const d = dashboard(session);
+  const t = aggregateInteraction(session, 'timeSaved');
+  const words = cloudSummary(session).slice(0, 18);
+  const navy=[0.184,0.251,0.384], blue=[0.443,0.620,0.969], green=[0.216,0.745,0.416], orange=[1.0,0.353,0.122], gray=[0.39,0.44,0.52];
+  const paleBlue=[0.93,0.95,1], paleGreen=[0.92,0.98,0.94], paleOrange=[1,0.95,0.92], paleYellow=[1,0.97,0.84], palePurple=[0.95,0.92,1], palePink=[1,0.92,0.95];
+  pdfRect(cmds,0,0,612,792,[1,1,1]);
+  pdfText(cmds,'AI PULSE - LIVE WORKSHOP RESULTS',48,738,11,true,blue);
+  pdfText(cmds,'Removall & AI',48,700,28,true,navy);
+  pdfText(cmds,'Live summary generated from the current workshop session.',48,676,12,false,gray);
+  pdfLine(cmds,48,657,564,657,[0.87,0.90,0.94],1);
+
+  // KPI cards
+  pdfRect(cmds,48,575,155,60,paleBlue); pdfText(cmds,'Participation',62,613,10,true,gray); pdfText(cmds,`${d.participationRate}%`,62,587,24,true,navy); pdfRect(cmds,62,579,125,5,[0.84,0.88,0.96]); if(d.participationRate>0) pdfRect(cmds,62,579,125*(d.participationRate/100),5,blue);
+  pdfRect(cmds,216,575,155,60,paleGreen); pdfText(cmds,'Respondents',230,613,10,true,gray); pdfText(cmds,`${d.respondentTotal}`,230,587,24,true,navy);
+  pdfRect(cmds,384,575,180,60,paleOrange); pdfText(cmds,'Avg. time saved / week',398,613,10,true,gray); pdfText(cmds,`${d.averageWeeklyHours.toFixed(d.averageWeeklyHours%1?1:0)} h`,398,587,24,true,navy);
+
+  // Time distribution
+  pdfText(cmds,'Weekly time saved',48,535,16,true,navy);
+  const options=[['h1','1 hour',blue],['h2','2 hours',green],['h4','4 hours',orange],['h8','8 hours',[0.95,0.74,0.23]]];
+  let y=505;
+  for(const [key,label,color] of options){
+    const count=t.counts[key]||0, share=t.total?count/t.total:0;
+    pdfText(cmds,label,48,y+4,10,false,navy);
+    pdfRect(cmds,112,y,260,12,[0.92,0.94,0.97]);
+    if(share>0) pdfRect(cmds,112,y,260*share,12,color);
+    pdfText(cmds,`${Math.round(share*100)}%`,385,y+4,10,true,navy);
+    y-=29;
+  }
+
+  // Word cloud area
+  pdfText(cmds,'What comes to mind when you think about AI?',48,380,16,true,navy);
+  pdfRect(cmds,48,115,516,245,[0.985,0.988,0.995]);
+  const fills=[paleBlue,paleGreen,paleOrange,paleYellow,palePurple,palePink];
+  let cx=62, cy=327, rowH=0;
+  const max=words.length?Math.max(...words.map(w=>w.count)):1;
+  if(!words.length){
+    pdfText(cmds,'No word-cloud responses yet.',64,326,12,false,gray);
+  } else {
+    for(let i=0;i<words.length;i++){
+      const item=words[i];
+      const size=10+Math.round((item.count-1)/Math.max(1,max-1)*7);
+      const shortLabel=item.label.length>24 ? item.label.slice(0,21)+'...' : item.label;
+      const label=`${shortLabel}${item.count>1?`  x${item.count}`:''}`;
+      const boxW=Math.min(150,Math.max(64,label.length*(size*0.52)+18));
+      const boxH=size+14;
+      if(cx+boxW>550){cx=62;cy-=Math.max(rowH,34)+8;rowH=0;}
+      if(cy-boxH<130) break;
+      pdfRect(cmds,cx,cy-boxH+4,boxW,boxH,fills[i%fills.length]);
+      pdfText(cmds,label,cx+8,cy-boxH/2,size,item.count>1,navy);
+      cx+=boxW+9; rowH=Math.max(rowH,boxH);
+    }
+  }
+  pdfText(cmds,'Live data only: the remaining source-document pages are reproduced visually after this page.',48,78,9,false,gray);
+  pdfText(cmds,'REMOVALL CARBON',48,45,8,true,navy);
+  pdfText(cmds,'AI Pulse - live results',455,45,8,false,gray);
+  return cmds.join('\n');
+}
+
+function buildLiveResultsPdf(session) {
+  const sourceDir = path.join(PUBLIC_DIR,'docs','source_pages');
+  const files = fs.readdirSync(sourceDir).filter(f => /\.jpg$/i.test(f)).sort();
+  const pdf = new PdfBuilder();
+  const catalogId=pdf.reserve(), pagesId=pdf.reserve(), f1=pdf.reserve(), f2=pdf.reserve();
+  pdf.set(f1,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  pdf.set(f2,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>');
+  const kids=[];
+  const addJpegPage=(jpegBuffer)=>{
+    const imageId=pdf.reserve(), contentId=pdf.reserve(), pageId=pdf.reserve();
+    pdf.set(imageId,pdf.stream('/Type /XObject /Subtype /Image /Width 935 /Height 1210 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode',jpegBuffer));
+    pdf.set(contentId,pdf.stream('',`q\n612 0 0 792 0 0 cm\n/Im0 Do\nQ`));
+    pdf.set(pageId,`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /Im0 ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>`);
+    kids.push(pageId);
+  };
+  const addResultsPage=()=>{
+    const contentId=pdf.reserve(),pageId=pdf.reserve();
+    pdf.set(contentId,pdf.stream('',liveResultsContent(session)));
+    pdf.set(pageId,`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 ${f1} 0 R /F2 ${f2} 0 R >> >> /Contents ${contentId} 0 R >>`);
+    kids.push(pageId);
+  };
+  files.forEach((file,index)=>{
+    addJpegPage(fs.readFileSync(path.join(sourceDir,file)));
+    if(index===0) addResultsPage();
+  });
+  pdf.set(pagesId,`<< /Type /Pages /Kids [${kids.map(id=>`${id} 0 R`).join(' ')}] /Count ${kids.length} >>`);
+  pdf.set(catalogId,`<< /Type /Catalog /Pages ${pagesId} 0 R >>`);
+  return pdf.finish(catalogId);
 }
 
 const server = http.createServer(async (req, res) => {
@@ -351,7 +453,7 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && pathname === '/api/qr') {
     const text = url.searchParams.get('text') || '';
-    if (!text) return sendJson(res, 400, { error:'Texte QR manquant' });
+    if (!text) return sendJson(res, 400, { error:'Missing QR text' });
     const svg = qrSvg(text);
     res.writeHead(200, { 'Content-Type':'image/svg+xml; charset=utf-8', 'Cache-Control':'no-store' });
     return res.end(svg);
@@ -373,7 +475,7 @@ const server = http.createServer(async (req, res) => {
     const id = match[1];
     const actionPath = match[2] || '';
     const session = sessions[id];
-    if (!session) return sendJson(res, 404, { error:'Session introuvable' });
+    if (!session) return sendJson(res, 404, { error:'Session not found' });
 
     if (req.method === 'GET' && actionPath === 'events') {
       res.writeHead(200, {
@@ -397,13 +499,29 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, interactionDefinitions);
     }
 
+    if (req.method === 'GET' && actionPath === 'live-results.pdf') {
+      try {
+        const pdf = buildLiveResultsPdf(session);
+        res.writeHead(200, {
+          'Content-Type':'application/pdf',
+          'Content-Disposition':`inline; filename="${session.id}-AI-Pulse-Live.pdf"`,
+          'Content-Length':pdf.length,
+          'Cache-Control':'no-store'
+        });
+        return res.end(pdf);
+      } catch (e) {
+        console.error('Live PDF generation failed:', e);
+        return sendJson(res, 500, { error:'Unable to generate live PDF' });
+      }
+    }
+
     if (req.method === 'GET' && actionPath === 'groups') {
       return sendJson(res, 200, classifyIdeas(session));
     }
 
     if (req.method === 'POST' && actionPath === 'heartbeat') {
       const body = await parseBody(req).catch(() => ({}));
-      if (body.anonId) {
+      if (body.anonId && body.role !== 'presenter') {
         session.participants[String(body.anonId).slice(0,80)] = Date.now();
         session.updatedAt = new Date().toISOString();
         persist();
@@ -417,21 +535,20 @@ const server = http.createServer(async (req, res) => {
       const interactionId = body.interactionId;
       const anonId = String(body.anonId || '').slice(0,80);
       const def = interactionDefinitions[interactionId];
-      if (!def || !anonId) return sendJson(res, 400, { error:'Réponse invalide' });
-      if (!session.interactionOpen || session.activeInteraction !== interactionId) return sendJson(res, 409, { error:'Cette interaction est fermée' });
+      if (!def || !anonId) return sendJson(res, 400, { error:'Invalid response' });
+      if (!session.interactionOpen || session.activeInteraction !== interactionId) return sendJson(res, 409, { error:'This interaction is closed' });
       session.responses[interactionId] ||= {};
       if (def.type === 'text') {
-        const text = String(body.answer || '').trim().slice(0,200);
-        if (!text) return sendJson(res, 400, { error:'Réponse vide' });
-        const existing = session.ideas.find(i => i.anonId === anonId);
-        if (existing) existing.text = text;
-        else session.ideas.push({ id: crypto.randomBytes(6).toString('hex'), anonId, text, createdAt:new Date().toISOString(), demo:false });
-        session.responses[interactionId][anonId] = 'submitted';
+        const text = String(body.answer || '').trim().slice(0, Number(def.maxLength) || 80);
+        if (!text) return sendJson(res, 400, { error:'Empty response' });
+        session.ideas.push({ id: crypto.randomBytes(6).toString('hex'), anonId, text, createdAt:new Date().toISOString(), demo:false });
+        session.responses[interactionId][anonId] ||= [];
+        session.responses[interactionId][anonId].push(text);
       } else {
         const valid = new Set((def.options || []).map(x => x[0]));
         let answer = body.answer;
         if (def.type === 'multi') answer = Array.isArray(answer) ? answer.filter(v => valid.has(v)) : [];
-        else if (!valid.has(answer)) return sendJson(res, 400, { error:'Option invalide' });
+        else if (!valid.has(answer)) return sendJson(res, 400, { error:'Invalid option' });
         session.responses[interactionId][anonId] = answer;
       }
       session.participants[anonId] = Date.now();
@@ -467,9 +584,9 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && actionPath === 'action') {
       const body = await parseBody(req).catch(() => ({}));
-      if (!isPresenter(session,url,body)) return sendJson(res, 403, { error:'Accès présentateur requis' });
+      if (!isPresenter(session,url,body)) return sendJson(res, 403, { error:'Presenter access required' });
       const type = body.type;
-      if (type === 'setSlide') session.slideIndex = Math.max(0, Math.min(16, Number(body.slideIndex) || 0));
+      if (type === 'setSlide') session.slideIndex = Math.max(0, Math.min(SLIDE_COUNT - 1, Number(body.slideIndex) || 0));
       if (type === 'openInteraction') {
         session.activeInteraction = body.interactionId || null;
         session.interactionOpen = Boolean(body.interactionId);
@@ -506,7 +623,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'GET' && actionPath === 'export.csv') {
-      if (!isPresenter(session,url)) return sendJson(res, 403, { error:'Accès présentateur requis' });
+      if (!isPresenter(session,url)) return sendJson(res, 403, { error:'Presenter access required' });
       const rows = [['type','interaction','participant_anonyme','valeur']];
       for (const [iid, answers] of Object.entries(session.responses)) {
         for (const [anon, answer] of Object.entries(answers)) rows.push(['response',iid,anon,Array.isArray(answer)?answer.join('|'):answer]);
@@ -520,10 +637,10 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'GET' && serveStatic(req,res,pathname)) return;
-  sendJson(res, 404, { error:'Introuvable' });
+  sendJson(res, 404, { error:'Not found' });
 });
 
 server.listen(PORT, HOST, () => {
   console.log(`Serveur sur http://${HOST}:${PORT}`);
-  for (const origin of networkOrigins()) console.log(`Réseau local: ${origin}`);
+  for (const origin of networkOrigins()) console.log(`Local network: ${origin}`);
 });

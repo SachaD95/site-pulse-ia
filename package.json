@@ -1,8 +1,8 @@
 {
   "name": "ai-pulse-interactive",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "Présentation interactive + questionnaire live pour atelier IA interne",
+  "description": "Five-slide interactive AI workshop for Removall Carbon with live polls, word cloud and live PDF results",
   "scripts": {
     "start": "node server.js"
   },

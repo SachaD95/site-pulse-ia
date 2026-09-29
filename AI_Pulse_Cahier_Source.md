@@ -1037,3 +1037,8 @@ La question sur la recherche documentaire reste interactive, mais elle est consi
 **Le niveau de détail peut être élevé dans le fond, mais l’écran doit rester visuellement simple.**
 
 **NE PAS AJOUTER D'autres Slide que celles abordés**
+
+
+## Ajout v8 - slides finales issues de la charte
+
+Deux slides sont ajoutées à la fin : **Process d’intégration** et **Planning utilisation IA**. Elles reprennent l’esprit graphique du fichier PowerPoint fourni : fond clair, titre sobre, structure documentaire, bleu Removall et footer confidentiel.
