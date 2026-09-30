@@ -111,7 +111,7 @@ function connectEvents(){
   eventSource=new EventSource(`/api/session/${encodeURIComponent(sessionId)}/events${q}`);
   eventSource.addEventListener('state',e=>{state=JSON.parse(e.data);render();});
   eventSource.addEventListener('presence',e=>{if(state){state.participantCount=JSON.parse(e.data).participantCount;renderLight();}});
-  eventSource.addEventListener('reaction',e=>{if(mode==='presenter') showReaction(JSON.parse(e.data).emoji);});
+  eventSource.addEventListener('reaction',e=>{if(mode==='presenter' || mode==='display') showReaction(JSON.parse(e.data).emoji);});
 }
 function heartbeat(){
   if(!sessionId) return;
