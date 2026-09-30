@@ -97,10 +97,10 @@ function newSession(id = defaultSessionId()) {
 
 if (!Object.keys(sessions).length) {
   const s = newSession();
-  console.log(`\nAI Pulse ready.\nPresenter: http://localhost:${PORT}/?mode=presenter&session=${encodeURIComponent(s.id)}&key=${s.presenterKey}\nParticipant:  http://localhost:${PORT}/?mode=participant&session=${encodeURIComponent(s.id)}\n`);
+  console.log(`\nAI Pulse ready.\nPresenter: http://localhost:${PORT}/?mode=presenter&session=${encodeURIComponent(s.id)}&key=${s.presenterKey}\nParticipant:  http://localhost:${PORT}/?mode=participant&session=${encodeURIComponent(s.id)}\nDisplay:      http://localhost:${PORT}/?mode=display&session=${encodeURIComponent(s.id)}\n`);
 } else {
   const s = Object.values(sessions)[0];
-  console.log(`\nAI Pulse ready.\nPresenter: http://localhost:${PORT}/?mode=presenter&session=${encodeURIComponent(s.id)}&key=${s.presenterKey}\nParticipant:  http://localhost:${PORT}/?mode=participant&session=${encodeURIComponent(s.id)}\n`);
+  console.log(`\nAI Pulse ready.\nPresenter: http://localhost:${PORT}/?mode=presenter&session=${encodeURIComponent(s.id)}&key=${s.presenterKey}\nParticipant:  http://localhost:${PORT}/?mode=participant&session=${encodeURIComponent(s.id)}\nDisplay:      http://localhost:${PORT}/?mode=display&session=${encodeURIComponent(s.id)}\n`);
 }
 
 function touch(session) {
@@ -521,7 +521,7 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && actionPath === 'heartbeat') {
       const body = await parseBody(req).catch(() => ({}));
-      if (body.anonId && body.role !== 'presenter') {
+      if (body.anonId && body.role !== 'presenter' && body.role !== 'display') {
         session.participants[String(body.anonId).slice(0,80)] = Date.now();
         session.updatedAt = new Date().toISOString();
         persist();

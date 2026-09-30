@@ -1,4 +1,4 @@
-# AI Pulse v11 - Removall & AI
+# AI Pulse v12 - Removall & AI
 
 Interactive five-slide workshop for Removall Carbon with live audience participation.
 
@@ -12,7 +12,8 @@ npm start
 
 The terminal prints:
 - the presenter URL with its private key;
-- the participant URL.
+- the participant URL;
+- the read-only display URL.
 
 ## Deploy on Render
 
@@ -27,7 +28,7 @@ The server uses `process.env.PORT`, so it is Render-ready.
 ## Five-slide flow
 
 1. Title + QR code - Discussion / Strategy / Training.
-2. Empty live word cloud. Participants can submit as many words or short phrases as they want. Basic case/plural normalization merges close variants and repeated terms grow visually.
+2. Empty live word cloud. Participants can submit as many words or short phrases as they want. Case/plural normalization merges close variants, repeated terms grow progressively and show an x2 / x3 / ... occurrence badge.
 3. Weekly time-saved poll - 1 / 2 / 4 / 8 hours per week - with live distribution and estimated average.
 4. Carbon-market document retrieval example with two conflicting delivery dates and a debrief checklist.
 5. "This presentation was generated with AI" - source-document preview, example prompt summary, live PDF link and static DOCX link.
@@ -48,3 +49,7 @@ The DOCX remains static.
 ## Privacy
 
 No name or email address is requested. Responses are associated only with a local anonymous session identifier.
+
+## Read-only display view
+
+Open `/?mode=display&session=<SESSION_ID>` on the screen shared with the audience. It follows the presenter slide and live result state automatically, but it has no navigation, interaction, timer or data controls. Press `F` if you want to request browser fullscreen from that view.

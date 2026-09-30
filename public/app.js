@@ -11,6 +11,8 @@ let timerTick = null;
 let selected = {};
 let submitted = {};
 let anonId = null;
+let seenCloudKeys = new Set();
+let cloudResizeBound = false;
 
 const slideTitles = [
   'Removall & AI',
@@ -43,6 +45,7 @@ function publicOrigin(){
   return location.origin;
 }
 function participantUrl(){ return `${publicOrigin()}/join/${encodeURIComponent(sessionId)}`; }
+function displayUrl(){ return `${publicOrigin()}/?mode=display&session=${encodeURIComponent(sessionId)}`; }
 async function api(path,options={}){
   const res=await fetch(path,{headers:{'Content-Type':'application/json',...(options.headers||{})},...options});
   if(!res.ok){ let msg='Request failed'; try{msg=(await res.json()).error||msg;}catch{} throw new Error(msg); }
@@ -69,19 +72,22 @@ async function init(){
   setInterval(heartbeat,25000);
   heartbeat();
   if(mode==='presenter') bindKeyboard();
+  if(mode==='display') bindDisplayKeyboard();
 }
 
 function renderRoleGate(){
   app.innerHTML=`<main class="app-shell"><section class="role-gate corporate-role-gate">
     <div class="eyebrow">AI Pulse · Interactive workshop</div>
     <h1>A presentation designed<br>to involve the room.</h1>
-    <p>Choose your view. Presenter mode controls the slides and live interactions. Participant mode only shows the active question.</p>
-    <div class="role-actions">
+    <p>Choose your view. Presenter mode controls the workshop, participant mode shows the active question, and display mode mirrors the live presentation without controls.</p>
+    <div class="role-actions three-role-actions">
       <button class="btn primary" id="joinParticipant">Join as participant</button>
       <button class="btn secondary" id="joinPresenter">Open presenter mode</button>
+      <button class="btn secondary" id="joinDisplay">Open display mode</button>
     </div>
   </section></main>`;
   document.getElementById('joinParticipant').onclick=()=>location.href=`/?mode=participant&session=${encodeURIComponent(sessionId)}`;
+  document.getElementById('joinDisplay').onclick=()=>location.href=`/?mode=display&session=${encodeURIComponent(sessionId)}`;
   document.getElementById('joinPresenter').onclick=()=>{
     const key=prompt('Presenter key (shown in the server terminal):');
     if(key) location.href=`/?mode=presenter&session=${encodeURIComponent(sessionId)}&key=${encodeURIComponent(key)}`;
@@ -111,7 +117,7 @@ function heartbeat(){
   if(!sessionId) return;
   api(`/api/session/${encodeURIComponent(sessionId)}/heartbeat`,{method:'POST',body:JSON.stringify({anonId,role:mode})}).catch(()=>{});
 }
-function render(){ if(!state) return; mode==='presenter'?renderPresenter():renderParticipant(); }
+function render(){ if(!state) return; if(mode==='presenter') renderPresenter(); else if(mode==='display') renderDisplay(); else renderParticipant(); }
 function renderLight(){ const el=document.querySelector('[data-participants]'); if(el) el.textContent=state.participantCount; }
 function bindKeyboard(){
   document.addEventListener('keydown',e=>{
@@ -128,6 +134,20 @@ async function presenterAction(payload){
 function changeSlide(delta){presenterAction({type:'setSlide',slideIndex:state.slideIndex+delta});}
 function goSlide(i){presenterAction({type:'setSlide',slideIndex:i});}
 function toggleFullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();}
+function bindDisplayKeyboard(){
+  document.addEventListener('keydown',e=>{
+    if(e.key.toLowerCase()==='f') toggleFullscreen();
+  });
+}
+function renderDisplay(){
+  app.innerHTML=`<main class="display-layout"><section class="display-stage-wrap"><div class="stage display-stage" id="stage">
+    ${state.demoLoaded?'<div class="demo-banner">DEMO DATA · FICTIONAL</div>':''}
+    ${renderTimer()}
+    ${renderSlide(state.slideIndex)}
+    <div class="stage-footer"><span>${state.slideIndex+1}/${slideTitles.length}</span><div class="progress"><i style="width:${((state.slideIndex+1)/slideTitles.length)*100}%"></i></div><span>${esc(slideTitles[state.slideIndex])}</span></div>
+  </div></section></main>`;
+  setupQr(); startTimerLoop(); requestAnimationFrame(layoutWordCloud);
+}
 
 function renderPresenter(){
   app.innerHTML=`<main class="presenter-layout">
@@ -142,7 +162,7 @@ function renderPresenter(){
   </main>`;
   document.getElementById('prevSlide').onclick=()=>changeSlide(-1);
   document.getElementById('nextSlide').onclick=()=>changeSlide(1);
-  bindSlideEvents(); bindPanelEvents(); setupQr(); startTimerLoop();
+  bindSlideEvents(); bindPanelEvents(); setupQr(); startTimerLoop(); requestAnimationFrame(layoutWordCloud);
 }
 function renderPresenterPanel(){
   const iid=slideInteraction[state.slideIndex];
@@ -152,7 +172,7 @@ function renderPresenterPanel(){
   return `<aside class="presenter-panel">
     <div class="panel-head"><strong>Presenter controls</strong><span><i class="status-dot"></i>Live</span></div>
     <div class="panel-section"><div class="panel-label">Session</div><div class="session-chip">${esc(sessionId)}</div><div class="panel-metric"><span>Active participants</span><b data-participants>${state.participantCount}</b></div><div class="panel-grid"><button class="btn small" id="copyJoin">Copy join link</button><button class="btn small" id="configQr">QR URL</button></div></div>
-    <div class="panel-section"><div class="panel-label">Navigation</div><div class="panel-grid"><button class="btn small" id="panelPrev">← Previous</button><button class="btn small" id="panelNext">Next →</button></div><div class="panel-grid" style="margin-top:8px"><button class="btn small" id="fullscreen">Fullscreen</button><button class="btn small" id="openParticipant">Mobile view</button></div></div>
+    <div class="panel-section"><div class="panel-label">Navigation</div><div class="panel-grid"><button class="btn small" id="panelPrev">← Previous</button><button class="btn small" id="panelNext">Next →</button></div><div class="panel-grid" style="margin-top:8px"><button class="btn small" id="fullscreen">Fullscreen</button><button class="btn small" id="openParticipant">Mobile view</button></div><button class="btn small" id="openDisplay" style="width:100%;margin-top:8px">Open display view</button></div>
     <div class="panel-section"><div class="panel-label">Slide interaction</div>${interactive?`<div class="panel-grid"><button class="btn ${open?'secondary':'primary'} small" id="openInteraction">${open?'Keep open':'Open'}</button><button class="btn small" id="closeInteraction" ${!open?'disabled':''}>Close</button></div><button class="btn small" style="width:100%;margin-top:8px" id="toggleResults">${results?'Hide results':'Show results'}</button>`:'<p style="color:var(--muted);font-size:13px">No participant input on this slide.</p>'}</div>
     <div class="panel-section"><div class="panel-label">Timer</div><div class="panel-grid"><button class="btn small" data-timer="30">30 sec</button><button class="btn small" data-timer="60">60 sec</button></div><button class="btn small" id="stopTimer" style="width:100%;margin-top:8px">Stop</button></div>
     <div class="panel-section"><div class="panel-label">Data</div><div class="panel-grid"><button class="btn small" id="demoData">Load demo</button><button class="btn small" id="exportCsv">Export CSV</button></div><button class="btn danger small" id="resetSession" style="width:100%;margin-top:8px">Reset session</button><button class="btn small" id="newSession" style="width:100%;margin-top:8px">Create new session</button></div>
@@ -166,6 +186,7 @@ function bindPanelEvents(){
   document.getElementById('copyJoin').onclick=async()=>{await navigator.clipboard?.writeText(participantUrl());toast('Participant link copied');};
   document.getElementById('configQr').onclick=()=>{const value=prompt('Public/network address to use in the QR code:',publicOrigin());if(value){localStorage.setItem('aiPulsePublicBase',value.trim().replace(/\/$/,''));render();toast('QR URL updated');}};
   document.getElementById('openParticipant').onclick=()=>window.open(participantUrl(),'_blank');
+  document.getElementById('openDisplay').onclick=()=>window.open(displayUrl(),'_blank');
   document.getElementById('openInteraction')?.addEventListener('click',()=>presenterAction({type:'openInteraction',interactionId:iid}));
   document.getElementById('closeInteraction')?.addEventListener('click',()=>presenterAction({type:'closeInteraction'}));
   document.getElementById('toggleResults')?.addEventListener('click',()=>presenterAction({type:'toggleResults',show:!(state.activeInteraction===iid&&state.showResults)}));
@@ -186,9 +207,9 @@ function renderSlide(i){
   const renderers=[slideIntro,slideWordCloud,slideWeeklyTime,slideRetrieval,slideSourceDocument];
   return renderers[i]?.()||'';
 }
-function brandMark(){return`<div class="brand-lockup"><img src="/assets/removall-mark.png" alt=""><span>Removall</span><small>CARBON</small></div>`;}
+function brandMark(){return`<div class="brand-lockup brand-lockup-v12"><img src="/assets/removall-logo.png" alt="Removall Carbon"></div>`;}
 function slideIntro(){
-  return `<article class="slide title-slide-v11"><div class="brand-top">${brandMark()}</div><div class="hero-grid title-hero-v11"><div><div class="eyebrow">AI breakfast · AI Pulse</div><h1>Removall & AI:<br><span>Moving forward</span></h1><div class="title-pill-row"><span>Discussion</span><span>Strategy</span><span>Training</span></div><button class="btn primary" data-goto="1">Start →</button></div><div class="qr-card light-card"><div class="qr-box" id="qrcode"></div><strong>Join the session</strong><small>${esc(sessionId)}</small><div class="hero-mini-tags"><span>Live</span><span>Interactive</span><span>AI</span></div></div></div></article>`;
+  return `<article class="slide title-slide-v11"><div class="brand-top">${brandMark()}</div><div class="hero-grid title-hero-v11"><div><div class="eyebrow">AI BREAKFAST - Pôle Inno</div><h1>Removall & AI:<br><span>Moving forward</span></h1><div class="title-pill-row"><span>Discussion</span><span>Strategy</span><span>Training</span></div></div><div class="qr-card light-card"><div class="qr-box" id="qrcode"></div><strong>Join the session</strong><small>${esc(sessionId)}</small><div class="hero-mini-tags"><span>Live</span><span>Interactive</span><span>AI</span></div></div></div></article>`;
 }
 
 function normalizeWordPart(word){
@@ -216,8 +237,51 @@ function cloudColor(key){let h=0;for(const c of key)h=((h<<5)-h+c.charCodeAt(0))
 function renderWordCloud(){
   const items=cloudData();
   if(!items.length)return'<div class="word-cloud-live empty"></div>';
-  const max=Math.max(...items.map(x=>x.count));
-  return `<div class="word-cloud-live">${items.map((item,i)=>{const scale=max===1?1:1+(item.count-1)/Math.max(1,max-1)*0.9;return`<span class="word-bubble" style="--bubble:${cloudColor(item.key)};--scale:${scale};">${esc(item.label)}</span>`;}).join('')}</div>`;
+  return `<div class="word-cloud-live">${items.map(item=>{
+    const size=18+Math.min(36,Math.max(0,item.count-1)*5);
+    const isNew=!seenCloudKeys.has(item.key);
+    seenCloudKeys.add(item.key);
+    return `<span class="word-bubble ${isNew?'new-word':''}" data-cloud-key="${esc(item.key)}" data-count="${item.count}" style="--bubble:${cloudColor(item.key)};--word-size:${size}px;">${esc(item.label)}${item.count>1?`<b class="word-count">×${item.count}</b>`:''}</span>`;
+  }).join('')}</div>`;
+}
+function layoutWordCloud(){
+  const cloud=document.querySelector('.word-cloud-live');
+  if(!cloud||cloud.classList.contains('empty'))return;
+  const bubbles=[...cloud.querySelectorAll('.word-bubble')];
+  if(!bubbles.length)return;
+  const rect=cloud.getBoundingClientRect();
+  if(rect.width<40||rect.height<40)return;
+  cloud.style.position='relative';
+  const placed=[];
+  bubbles.forEach((el,idx)=>{
+    el.style.left='0px'; el.style.top='0px'; el.style.visibility='hidden';
+    el.style.position='absolute'; el.style.transform='none';
+    const w=el.offsetWidth, h=el.offsetHeight;
+    let chosen=null;
+    const cx=rect.width/2, cy=rect.height/2;
+    for(let step=0;step<900;step++){
+      const angle=step*0.43;
+      const radius=3.1*Math.sqrt(step);
+      const x=cx+Math.cos(angle)*radius*1.45-w/2;
+      const y=cy+Math.sin(angle)*radius*.88-h/2;
+      const box={x,y,w,h};
+      const inBounds=x>=4&&y>=4&&x+w<=rect.width-4&&y+h<=rect.height-4;
+      if(!inBounds)continue;
+      const overlaps=placed.some(p=>!(box.x+box.w+7<p.x||p.x+p.w+7<box.x||box.y+box.h+6<p.y||p.y+p.h+6<box.y));
+      if(!overlaps){chosen=box;break;}
+    }
+    if(!chosen){
+      const col=idx%5,row=Math.floor(idx/5);
+      chosen={x:10+col*(rect.width-20)/5,y:10+row*54,w,h};
+    }
+    placed.push(chosen);
+    el.style.left=`${chosen.x}px`;el.style.top=`${chosen.y}px`;el.style.visibility='visible';
+    el.style.setProperty('--rotate',`${(idx%5-2)*1.5}deg`);
+  });
+  if(!cloudResizeBound){
+    cloudResizeBound=true;
+    window.addEventListener('resize',()=>{clearTimeout(window.__cloudResizeTimer);window.__cloudResizeTimer=setTimeout(layoutWordCloud,80);});
+  }
 }
 function slideWordCloud(){
   return `<article class="slide word-cloud-slide-v11"><h2>What comes to mind when you think about AI?</h2><div class="cloud-frame-v11">${renderWordCloud()}</div></article>`;
@@ -239,8 +303,10 @@ function slideWeeklyTime(){
 }
 
 function slideRetrieval(){
-  const id='retrievalCheck',def=definitions[id],active=state.activeInteraction===id,show=active&&state.showResults;
-  return `<article class="slide retrieval-v11"><div class="eyebrow">Document retrieval</div><h2>Will AI find the right delivery date?</h2><div class="retrieval-grid-v11"><div class="fake-doc carbon-doc-v11"><div class="doc-head"><b>FORWARD CARBON CREDIT PURCHASE AGREEMENT</b><span>extract · 12 pages</span></div><div class="doc-copy-v11"><p><b>Project:</b> Delta Mangrove Restoration Programme</p><p><b>Standard:</b> Verra VCS + CCB label under review</p><p><b>Volume:</b> 120,000 tCO2e, split into two delivery tranches</p><p><b>Buyer:</b> Removall Carbon</p><p><b>Commercial target:</b> secure Q4 2026 retirements for key clients</p><div class="date-callout-v11 visible-date"><span>Easy-to-find date</span><strong>First issuance expected by <em>30 September 2026</em></strong></div><p><b>Payment terms:</b> Net 30 after issuance and transfer confirmation</p><p><b>Registry note:</b> serial numbers released only after verifier sign-off</p><p><b>Monitoring package:</b> includes field samples, satellite imagery and leakage memo</p><p><b>Operational note:</b> if CCB review slips, pricing stays unchanged for tranche 1</p><p><b>Annex reference:</b> Appendix B covers verifier sampling escalation</p></div><div class="date-callout-v11 hidden-date"><span>Critical date hidden in Appendix B</span><strong>If verifier sampling exceeds 15%, first delivery moves to <em>14 October 2026</em>.</strong></div></div><div class="retrieval-side-v11"><div class="live-badge"><i></i>${active&&state.interactionOpen?'QUESTION OPEN':'Interaction'}</div><p class="question-small">${esc(def.question)}</p>${show?`<div class="retrieval-answer-v11"><h3>Answer: not necessarily.</h3><div class="tips-v11"><span>Rename documents clearly</span><span>Create a document reference table</span><span>Explicitly require the model to read a specific document</span><span>When sources conflict, specify which document takes precedence</span></div></div>`:`<div class="placeholder-results compact-placeholder"><strong>${active&&state.interactionOpen?'Responses are coming in':'Ready'}</strong><p>Reveal the answer when you want to debrief.</p></div>`}</div></div></article>`;
+  const id='retrievalCheck',def=definitions[id],agg=state.aggregates[id]||{total:0,counts:{}},active=state.activeInteraction===id,show=active&&state.showResults;
+  const total=agg.total||1,yes=pct(agg.counts.yes||0,total),no=pct(agg.counts.no||0,total);
+  const pollResults=`<div class="retrieval-poll-results-v12"><div class="mini-donut retrieval-donut-v12" style="background:conic-gradient(#719EF7 0 ${yes}%,#37BE6A ${yes}% 100%)"><div><b>${agg.total}</b><span>responses</span></div></div><div class="retrieval-legend retrieval-legend-v12"><span><i style="background:#719EF7"></i>Yes ${yes}%</span><span><i style="background:#37BE6A"></i>No ${no}%</span></div></div>`;
+  return `<article class="slide retrieval-v11"><div class="eyebrow">Document retrieval</div><h2>Will AI find the right delivery date?</h2><div class="retrieval-grid-v11"><div class="fake-doc carbon-doc-v11"><div class="doc-head"><b>FORWARD CARBON CREDIT PURCHASE AGREEMENT</b><span>extract · 12 pages</span></div><div class="doc-copy-v11"><p><b>Project:</b> Delta Mangrove Restoration Programme</p><p><b>Standard:</b> Verra VCS + CCB label under review</p><p><b>Volume:</b> 120,000 tCO2e, split into two delivery tranches</p><p><b>Buyer:</b> Removall Carbon</p><p><b>Commercial target:</b> secure Q4 2026 retirements for key clients</p><div class="date-callout-v11 visible-date"><span>Easy-to-find date</span><strong>First issuance expected by <em>30 September 2026</em></strong></div><p><b>Payment terms:</b> Net 30 after issuance and transfer confirmation</p><p><b>Registry note:</b> serial numbers released only after verifier sign-off</p><p><b>Monitoring package:</b> includes field samples, satellite imagery and leakage memo</p><p><b>Operational note:</b> if CCB review slips, pricing stays unchanged for tranche 1</p><p><b>Annex reference:</b> Appendix B covers verifier sampling escalation</p></div><div class="date-callout-v11 hidden-date"><span>Critical date hidden in Appendix B</span><strong>If verifier sampling exceeds 15%, first delivery moves to <em>14 October 2026</em>.</strong></div></div><div class="retrieval-side-v11"><div class="live-badge"><i></i>${active&&state.interactionOpen?'QUESTION OPEN':'Interaction'}</div><p class="question-small">${esc(def.question)}</p>${show?`${pollResults}<div class="retrieval-answer-v11"><h3>Answer: not necessarily.</h3><div class="tips-v11"><span>Rename documents clearly</span><span>Create a document reference table</span><span>Explicitly require the model to read a specific document</span><span>When sources conflict, specify which document takes precedence</span></div></div>`:`<div class="placeholder-results compact-placeholder"><strong>${active&&state.interactionOpen?'Responses are coming in':'Ready'}</strong><p>Reveal the answer when you want to debrief.</p></div>`}</div></div></article>`;
 }
 
 function slideSourceDocument(){
