@@ -1,1 +1,19 @@
-{}
+{
+  "AI-2026-10": {
+    "id": "AI-2026-10",
+    "presenterKey": "182a003e72932531",
+    "createdAt": "2026-10-01T10:39:48.738Z",
+    "updatedAt": "2026-10-01T10:43:53.492Z",
+    "slideIndex": 0,
+    "activeInteraction": null,
+    "interactionOpen": false,
+    "showResults": false,
+    "timerEndsAt": null,
+    "responses": {},
+    "participants": {},
+    "ideas": [],
+    "shortlistedIdeaIds": [],
+    "ideaVotes": {},
+    "demoLoaded": false
+  }
+}

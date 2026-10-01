@@ -12,6 +12,7 @@ const HOST = process.env.HOST || '0.0.0.0';
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const DATA_FILE = path.join(__dirname, 'data', 'sessions.json');
 const sseClients = new Map();
+const activeSseClients = new Set();
 
 const SLIDE_COUNT = 5;
 
@@ -49,9 +50,27 @@ function readSessions() {
 }
 
 let sessions = readSessions();
+let activeSessionId = Object.values(sessions).sort((a,b)=>String(b.updatedAt||b.createdAt||'').localeCompare(String(a.updatedAt||a.createdAt||'')))[0]?.id || null;
 
 function persist() {
   fs.writeFileSync(DATA_FILE, JSON.stringify(sessions, null, 2));
+}
+
+function broadcastActive() {
+  const packet = `event: active\ndata: ${JSON.stringify({ id: activeSessionId })}\n\n`;
+  for (const res of activeSseClients) res.write(packet);
+}
+function setActiveSession(id) {
+  if (!id || !sessions[id]) return;
+  if (activeSessionId === id) return;
+  activeSessionId = id;
+  broadcastActive();
+}
+function currentSession() {
+  if (activeSessionId && sessions[activeSessionId]) return sessions[activeSessionId];
+  const latest = Object.values(sessions).sort((a,b)=>String(b.updatedAt||b.createdAt||'').localeCompare(String(a.updatedAt||a.createdAt||'')))[0] || null;
+  activeSessionId = latest?.id || null;
+  return latest;
 }
 
 function defaultSessionId() {
@@ -96,11 +115,17 @@ function newSession(id = defaultSessionId()) {
 }
 
 if (!Object.keys(sessions).length) {
-  const s = newSession();
-  console.log(`\nAI Pulse ready.\nPresenter: http://localhost:${PORT}/?mode=presenter&session=${encodeURIComponent(s.id)}&key=${s.presenterKey}\nParticipant:  http://localhost:${PORT}/?mode=participant&session=${encodeURIComponent(s.id)}\nDisplay:      http://localhost:${PORT}/?mode=display&session=${encodeURIComponent(s.id)}\n`);
-} else {
-  const s = Object.values(sessions)[0];
-  console.log(`\nAI Pulse ready.\nPresenter: http://localhost:${PORT}/?mode=presenter&session=${encodeURIComponent(s.id)}&key=${s.presenterKey}\nParticipant:  http://localhost:${PORT}/?mode=participant&session=${encodeURIComponent(s.id)}\nDisplay:      http://localhost:${PORT}/?mode=display&session=${encodeURIComponent(s.id)}\n`);
+  const created = newSession();
+  activeSessionId = created.id;
+}
+{
+  const current = currentSession();
+  console.log(`
+Petit dej IA ready.
+Presenter: http://localhost:${PORT}/?mode=presenter&session=${encodeURIComponent(current.id)}&key=${current.presenterKey}
+Participant:  http://localhost:${PORT}/?mode=participant&session=${encodeURIComponent(current.id)}
+Display:      http://localhost:${PORT}/?mode=display
+`);
 }
 
 function touch(session) {
@@ -239,7 +264,7 @@ function serveStatic(req, res, pathname) {
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) return false;
   const ext = path.extname(filePath).toLowerCase();
   const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'application/javascript; charset=utf-8', '.svg':'image/svg+xml', '.png':'image/png', '.json':'application/json; charset=utf-8', '.pdf':'application/pdf', '.docx':'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
-  res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream', 'Cache-Control': ext === '.html' ? 'no-store' : 'public, max-age=3600' });
+  res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream', 'Cache-Control': ['.html','.js','.css'].includes(ext) ? 'no-store' : 'public, max-age=3600' });
   fs.createReadStream(filePath).pipe(res);
   return true;
 }
@@ -354,7 +379,7 @@ function liveResultsContent(session) {
   const navy=[0.184,0.251,0.384], blue=[0.443,0.620,0.969], green=[0.216,0.745,0.416], orange=[1.0,0.353,0.122], gray=[0.39,0.44,0.52];
   const paleBlue=[0.93,0.95,1], paleGreen=[0.92,0.98,0.94], paleOrange=[1,0.95,0.92], paleYellow=[1,0.97,0.84], palePurple=[0.95,0.92,1], palePink=[1,0.92,0.95];
   pdfRect(cmds,0,0,612,792,[1,1,1]);
-  pdfText(cmds,'AI PULSE - LIVE WORKSHOP RESULTS',48,738,11,true,blue);
+  pdfText(cmds,'PETIT DEJ IA - LIVE WORKSHOP RESULTS',48,738,11,true,blue);
   pdfText(cmds,'Removall & AI',48,700,28,true,navy);
   pdfText(cmds,'Live summary generated from the current workshop session.',48,676,12,false,gray);
   pdfLine(cmds,48,657,564,657,[0.87,0.90,0.94],1);
@@ -402,7 +427,7 @@ function liveResultsContent(session) {
   }
   pdfText(cmds,'Live data only: the remaining source-document pages are reproduced visually after this page.',48,78,9,false,gray);
   pdfText(cmds,'REMOVALL CARBON',48,45,8,true,navy);
-  pdfText(cmds,'AI Pulse - live results',455,45,8,false,gray);
+  pdfText(cmds,'Petit dej IA - live results',455,45,8,false,gray);
   return cmds.join('\n');
 }
 
@@ -451,6 +476,25 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 200, { networkOrigins: networkOrigins() });
   }
 
+
+  if (req.method === 'GET' && pathname === '/api/active-session') {
+    const current = currentSession();
+    return sendJson(res, 200, { id: current?.id || null });
+  }
+
+  if (req.method === 'GET' && pathname === '/api/active-events') {
+    res.writeHead(200, {
+      'Content-Type':'text/event-stream',
+      'Cache-Control':'no-cache',
+      'Connection':'keep-alive',
+      'Access-Control-Allow-Origin':'*'
+    });
+    res.write(`event: active\ndata: ${JSON.stringify({ id: currentSession()?.id || null })}\n\n`);
+    activeSseClients.add(res);
+    req.on('close', () => activeSseClients.delete(res));
+    return;
+  }
+
   if (req.method === 'GET' && pathname === '/api/qr') {
     const text = url.searchParams.get('text') || '';
     if (!text) return sendJson(res, 400, { error:'Missing QR text' });
@@ -460,13 +504,14 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'GET' && pathname === '/api/sessions') {
-    const list = Object.values(sessions).map(s => ({ id:s.id, createdAt:s.createdAt, updatedAt:s.updatedAt }));
+    const list = Object.values(sessions).sort((a,b)=>String(b.updatedAt||b.createdAt||'').localeCompare(String(a.updatedAt||a.createdAt||''))).map(s => ({ id:s.id, createdAt:s.createdAt, updatedAt:s.updatedAt, active:s.id===activeSessionId }));
     return sendJson(res, 200, list);
   }
 
   if (req.method === 'POST' && pathname === '/api/sessions') {
     const body = await parseBody(req).catch(() => ({}));
     const s = newSession((body.id || defaultSessionId()).replace(/[^A-Za-z0-9_-]/g,'').slice(0,32) || defaultSessionId());
+    setActiveSession(s.id);
     return sendJson(res, 201, { id:s.id, presenterKey:s.presenterKey });
   }
 
@@ -478,13 +523,15 @@ const server = http.createServer(async (req, res) => {
     if (!session) return sendJson(res, 404, { error:'Session not found' });
 
     if (req.method === 'GET' && actionPath === 'events') {
+      const presenterAccess = isPresenter(session,url);
+      if (presenterAccess) setActiveSession(id);
       res.writeHead(200, {
         'Content-Type':'text/event-stream',
         'Cache-Control':'no-cache',
         'Connection':'keep-alive',
         'Access-Control-Allow-Origin':'*'
       });
-      res.write(`event: state\ndata: ${JSON.stringify(publicState(session, isPresenter(session,url)))}\n\n`);
+      res.write(`event: state\ndata: ${JSON.stringify(publicState(session, presenterAccess))}\n\n`);
       if (!sseClients.has(id)) sseClients.set(id, new Set());
       sseClients.get(id).add(res);
       req.on('close', () => sseClients.get(id)?.delete(res));
@@ -492,7 +539,9 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'GET' && actionPath === '') {
-      return sendJson(res, 200, publicState(session, isPresenter(session,url)));
+      const presenterAccess = isPresenter(session,url);
+      if (presenterAccess) setActiveSession(id);
+      return sendJson(res, 200, publicState(session, presenterAccess));
     }
 
     if (req.method === 'GET' && actionPath === 'definitions') {
@@ -504,7 +553,7 @@ const server = http.createServer(async (req, res) => {
         const pdf = buildLiveResultsPdf(session);
         res.writeHead(200, {
           'Content-Type':'application/pdf',
-          'Content-Disposition':`inline; filename="${session.id}-AI-Pulse-Live.pdf"`,
+          'Content-Disposition':`inline; filename="Petit-dej-IA-Live.pdf"`,
           'Content-Length':pdf.length,
           'Cache-Control':'no-store'
         });
@@ -521,6 +570,7 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && actionPath === 'heartbeat') {
       const body = await parseBody(req).catch(() => ({}));
+      if (body.role === 'presenter' && isPresenter(session,url,body)) setActiveSession(id);
       if (body.anonId && body.role !== 'presenter' && body.role !== 'display') {
         session.participants[String(body.anonId).slice(0,80)] = Date.now();
         session.updatedAt = new Date().toISOString();
@@ -585,6 +635,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && actionPath === 'action') {
       const body = await parseBody(req).catch(() => ({}));
       if (!isPresenter(session,url,body)) return sendJson(res, 403, { error:'Presenter access required' });
+      setActiveSession(id);
       const type = body.type;
       if (type === 'setSlide') session.slideIndex = Math.max(0, Math.min(SLIDE_COUNT - 1, Number(body.slideIndex) || 0));
       if (type === 'openInteraction') {

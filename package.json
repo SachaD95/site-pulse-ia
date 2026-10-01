@@ -1,6 +1,6 @@
 {
   "name": "ai-pulse-interactive",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "description": "Five-slide interactive AI workshop for Removall Carbon with live polls, animated word cloud, read-only display view and live PDF results",
   "scripts": {

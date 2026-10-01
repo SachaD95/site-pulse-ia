@@ -913,3 +913,20 @@ body{font-family:"Montserrat","Arial",sans-serif}
   .presenter-layout{grid-template-columns:1fr}
   .presenter-panel{position:relative;height:auto;top:auto}
 }
+
+/* ===== V13: stable word cloud + clearer slide 2/5 hierarchy ===== */
+.word-cloud-slide-v11{padding-top:52px!important}
+.cloud-title-block{display:flex;flex-direction:column;align-items:flex-start;gap:7px;flex:0 0 auto}
+.cloud-live-badge{background:#EDF3FF!important;border-color:#C4D6FF!important;color:#4778D8!important;padding:7px 11px!important;font-size:11px!important;letter-spacing:.06em}
+.cloud-live-badge i{background:#719EF7!important;box-shadow:none!important}
+.word-cloud-slide-v11 .cloud-title-block h2{margin:0!important;max-width:1040px!important}
+.cloud-subtitle-v13{margin:0!important;color:#667085!important;font-size:17px!important;line-height:1.35!important}
+.cloud-frame-v11{margin-top:14px!important;padding:18px 22px 32px!important;background:#FCFDFE!important}
+.word-cloud-live{isolation:isolate}
+.word-bubble{will-change:left,top,font-size,transform;transform-origin:center center;box-sizing:border-box}
+.cloud-empty-copy{position:absolute;inset:0;display:grid;place-items:center;color:#A1AABC;font-size:15px;font-weight:650}
+
+.source-subtitle-v13{margin:-4px 0 8px!important;color:#667085!important;font-size:17px!important;line-height:1.35!important}
+.source-v11-grid{margin-top:4px!important}
+.source-actions{display:flex;gap:10px;flex-wrap:wrap}
+.source-actions .btn{min-width:155px;text-align:center}

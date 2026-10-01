@@ -13,6 +13,8 @@ let submitted = {};
 let anonId = null;
 let seenCloudKeys = new Set();
 let cloudResizeBound = false;
+let activeSessionSource = null;
+let switchingActiveSession = false;
 
 const slideTitles = [
   'Removall & AI',
@@ -45,7 +47,7 @@ function publicOrigin(){
   return location.origin;
 }
 function participantUrl(){ return `${publicOrigin()}/join/${encodeURIComponent(sessionId)}`; }
-function displayUrl(){ return `${publicOrigin()}/?mode=display&session=${encodeURIComponent(sessionId)}`; }
+function displayUrl(){ return `${publicOrigin()}/?mode=display`; }
 async function api(path,options={}){
   const res=await fetch(path,{headers:{'Content-Type':'application/json',...(options.headers||{})},...options});
   if(!res.ok){ let msg='Request failed'; try{msg=(await res.json()).error||msg;}catch{} throw new Error(msg); }
@@ -58,21 +60,49 @@ function toast(message){
 }
 
 async function init(){
-  if(!sessionId){
+  meta=await api('/api/meta').catch(()=>({networkOrigins:[]}));
+  // Display is intentionally session-agnostic: it always follows the presenter session
+  // currently marked active by the server, even if an old ?session=... remains in the URL.
+  if(mode==='display'){
+    const active=await api('/api/active-session').catch(()=>({id:null}));
+    sessionId=active.id||null;
+  } else if(!sessionId){
     const list=await api('/api/sessions').catch(()=>[]);
     sessionId=list[0]?.id||null;
   }
-  if(!sessionId){ renderNoSession(); return; }
+  if(!sessionId){ renderNoSession(); if(mode==='display') connectActiveSessionEvents(); return; }
   anonId=getAnonId(sessionId);
   if(!mode){ renderRoleGate(); return; }
-  meta=await api('/api/meta').catch(()=>({networkOrigins:[]}));
   definitions=await api(`/api/session/${encodeURIComponent(sessionId)}/definitions`);
   await refreshState();
   if(params.get('snapshot')!=='1') connectEvents();
+  if(mode==='display') connectActiveSessionEvents();
   setInterval(heartbeat,25000);
   heartbeat();
   if(mode==='presenter') bindKeyboard();
   if(mode==='display') bindDisplayKeyboard();
+}
+
+async function switchToActiveSession(nextId){
+  if(!nextId || nextId===sessionId || switchingActiveSession) return;
+  switchingActiveSession=true;
+  try{
+    eventSource?.close();
+    sessionId=nextId;
+    anonId=getAnonId(sessionId);
+    definitions=await api(`/api/session/${encodeURIComponent(sessionId)}/definitions`);
+    await refreshState();
+    connectEvents();
+  }catch(e){ console.warn('Unable to switch display session',e); }
+  finally{ switchingActiveSession=false; }
+}
+function connectActiveSessionEvents(){
+  if(activeSessionSource) activeSessionSource.close();
+  activeSessionSource=new EventSource('/api/active-events');
+  activeSessionSource.addEventListener('active',e=>{
+    const data=JSON.parse(e.data||'{}');
+    if(data.id) switchToActiveSession(data.id);
+  });
 }
 
 function renderRoleGate(){
@@ -87,7 +117,7 @@ function renderRoleGate(){
     </div>
   </section></main>`;
   document.getElementById('joinParticipant').onclick=()=>location.href=`/?mode=participant&session=${encodeURIComponent(sessionId)}`;
-  document.getElementById('joinDisplay').onclick=()=>location.href=`/?mode=display&session=${encodeURIComponent(sessionId)}`;
+  document.getElementById('joinDisplay').onclick=()=>location.href='/?mode=display';
   document.getElementById('joinPresenter').onclick=()=>{
     const key=prompt('Presenter key (shown in the server terminal):');
     if(key) location.href=`/?mode=presenter&session=${encodeURIComponent(sessionId)}&key=${encodeURIComponent(key)}`;
@@ -111,11 +141,11 @@ function connectEvents(){
   eventSource=new EventSource(`/api/session/${encodeURIComponent(sessionId)}/events${q}`);
   eventSource.addEventListener('state',e=>{state=JSON.parse(e.data);render();});
   eventSource.addEventListener('presence',e=>{if(state){state.participantCount=JSON.parse(e.data).participantCount;renderLight();}});
-  eventSource.addEventListener('reaction',e=>{if(mode==='presenter' || mode==='display') showReaction(JSON.parse(e.data).emoji);});
+  eventSource.addEventListener('reaction',e=>{if(mode==='presenter'||mode==='display') showReaction(JSON.parse(e.data).emoji);});
 }
 function heartbeat(){
   if(!sessionId) return;
-  api(`/api/session/${encodeURIComponent(sessionId)}/heartbeat`,{method:'POST',body:JSON.stringify({anonId,role:mode})}).catch(()=>{});
+  api(`/api/session/${encodeURIComponent(sessionId)}/heartbeat`,{method:'POST',body:JSON.stringify({anonId,role:mode,key:mode==='presenter'?presenterKey:''})}).catch(()=>{});
 }
 function render(){ if(!state) return; if(mode==='presenter') renderPresenter(); else if(mode==='display') renderDisplay(); else renderParticipant(); }
 function renderLight(){ const el=document.querySelector('[data-participants]'); if(el) el.textContent=state.participantCount; }
@@ -236,55 +266,89 @@ const cloudPalette=['#DCE7FF','#DDF6E8','#FFE6D8','#FFF1B8','#EADFFF','#DFF7F4',
 function cloudColor(key){let h=0;for(const c of key)h=((h<<5)-h+c.charCodeAt(0))|0;return cloudPalette[Math.abs(h)%cloudPalette.length];}
 function renderWordCloud(){
   const items=cloudData();
-  if(!items.length)return'<div class="word-cloud-live empty"></div>';
+  if(!items.length)return'<div class="word-cloud-live empty"><div class="cloud-empty-copy">Waiting for the first word…</div></div>';
   return `<div class="word-cloud-live">${items.map(item=>{
-    const size=18+Math.min(36,Math.max(0,item.count-1)*5);
+    // Logical font size. layoutWordCloud scales it with the cloud canvas, so browser zoom
+    // changes the whole composition instead of changing the relative geometry.
+    const logicalSize=22+Math.min(40,Math.max(0,item.count-1)*6);
     const isNew=!seenCloudKeys.has(item.key);
     seenCloudKeys.add(item.key);
-    return `<span class="word-bubble ${isNew?'new-word':''}" data-cloud-key="${esc(item.key)}" data-count="${item.count}" style="--bubble:${cloudColor(item.key)};--word-size:${size}px;">${esc(item.label)}${item.count>1?`<b class="word-count">×${item.count}</b>`:''}</span>`;
+    return `<span class="word-bubble ${isNew?'new-word':''}" data-cloud-key="${esc(item.key)}" data-count="${item.count}" data-logical-size="${logicalSize}" style="--bubble:${cloudColor(item.key)};">${esc(item.label)}${item.count>1?`<b class="word-count">×${item.count}</b>`:''}</span>`;
   }).join('')}</div>`;
 }
+function cloudHash(value){let h=2166136261;for(const ch of String(value)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
 function layoutWordCloud(){
   const cloud=document.querySelector('.word-cloud-live');
   if(!cloud||cloud.classList.contains('empty'))return;
   const bubbles=[...cloud.querySelectorAll('.word-bubble')];
   if(!bubbles.length)return;
   const rect=cloud.getBoundingClientRect();
-  if(rect.width<40||rect.height<40)return;
-  cloud.style.position='relative';
+  if(rect.width<80||rect.height<80)return;
+
+  // Fixed logical canvas = stable composition at 67%, 80%, 100% or fullscreen.
+  const VW=1000, VH=430;
+  const sx=rect.width/VW, sy=rect.height/VH;
+  const scale=Math.min(sx,sy);
   const placed=[];
+
+  // Larger / repeated terms are placed first, then alphabetical key for deterministic layout.
+  bubbles.sort((a,b)=>(Number(b.dataset.count)-Number(a.dataset.count))||a.dataset.cloudKey.localeCompare(b.dataset.cloudKey));
   bubbles.forEach((el,idx)=>{
+    const logicalSize=Number(el.dataset.logicalSize)||22;
+    el.style.fontSize=`${Math.max(12,logicalSize*scale)}px`;
     el.style.left='0px'; el.style.top='0px'; el.style.visibility='hidden';
     el.style.position='absolute'; el.style.transform='none';
-    const w=el.offsetWidth, h=el.offsetHeight;
+    const w=el.offsetWidth/sx, h=el.offsetHeight/sy;
+    const seed=cloudHash(el.dataset.cloudKey);
+    const phase=((seed%360)/180)*Math.PI;
     let chosen=null;
-    const cx=rect.width/2, cy=rect.height/2;
-    for(let step=0;step<900;step++){
-      const angle=step*0.43;
-      const radius=3.1*Math.sqrt(step);
-      const x=cx+Math.cos(angle)*radius*1.45-w/2;
+    const cx=VW/2, cy=VH/2;
+    // Elliptical golden-angle spiral gives a much more cloud-like distribution than rows.
+    for(let step=0;step<1400;step++){
+      const angle=phase+step*2.399963229728653;
+      const radius=4.0*Math.sqrt(step);
+      const x=cx+Math.cos(angle)*radius*1.75-w/2;
       const y=cy+Math.sin(angle)*radius*.88-h/2;
       const box={x,y,w,h};
-      const inBounds=x>=4&&y>=4&&x+w<=rect.width-4&&y+h<=rect.height-4;
+      const marginX=8, marginY=7;
+      const inBounds=x>=5&&y>=5&&x+w<=VW-5&&y+h<=VH-5;
       if(!inBounds)continue;
-      const overlaps=placed.some(p=>!(box.x+box.w+7<p.x||p.x+p.w+7<box.x||box.y+box.h+6<p.y||p.y+p.h+6<box.y));
+      const overlaps=placed.some(p=>!(box.x+box.w+marginX<p.x||p.x+p.w+marginX<box.x||box.y+box.h+marginY<p.y||p.y+p.h+marginY<box.y));
       if(!overlaps){chosen=box;break;}
     }
+    // Never stack words if the cloud is saturated: progressively shrink this word and retry.
     if(!chosen){
-      const col=idx%5,row=Math.floor(idx/5);
-      chosen={x:10+col*(rect.width-20)/5,y:10+row*54,w,h};
+      for(let shrink=.9;shrink>=.58&&!chosen;shrink-=.08){
+        el.style.fontSize=`${Math.max(10,logicalSize*scale*shrink)}px`;
+        const sw=el.offsetWidth/sx, sh=el.offsetHeight/sy;
+        for(let step=0;step<1600;step++){
+          const angle=phase+step*2.399963229728653;
+          const radius=4.1*Math.sqrt(step);
+          const x=cx+Math.cos(angle)*radius*1.78-sw/2;
+          const y=cy+Math.sin(angle)*radius*.9-sh/2;
+          const box={x,y,w:sw,h:sh};
+          if(x<5||y<5||x+sw>VW-5||y+sh>VH-5)continue;
+          const overlaps=placed.some(p=>!(box.x+box.w+6<p.x||p.x+p.w+6<box.x||box.y+box.h+5<p.y||p.y+p.h+5<box.y));
+          if(!overlaps){chosen=box;break;}
+        }
+      }
     }
+    if(!chosen){el.style.display='none';return;}
     placed.push(chosen);
-    el.style.left=`${chosen.x}px`;el.style.top=`${chosen.y}px`;el.style.visibility='visible';
-    el.style.setProperty('--rotate',`${(idx%5-2)*1.5}deg`);
+    el.style.display='inline-flex';
+    el.style.left=`${chosen.x*sx}px`;
+    el.style.top=`${chosen.y*sy}px`;
+    el.style.visibility='visible';
+    const rot=((seed%7)-3)*.7;
+    el.style.setProperty('--rotate',`${rot}deg`);
   });
   if(!cloudResizeBound){
     cloudResizeBound=true;
-    window.addEventListener('resize',()=>{clearTimeout(window.__cloudResizeTimer);window.__cloudResizeTimer=setTimeout(layoutWordCloud,80);});
+    window.addEventListener('resize',()=>{clearTimeout(window.__cloudResizeTimer);window.__cloudResizeTimer=setTimeout(layoutWordCloud,100);});
   }
 }
 function slideWordCloud(){
-  return `<article class="slide word-cloud-slide-v11"><h2>What comes to mind when you think about AI?</h2><div class="cloud-frame-v11">${renderWordCloud()}</div></article>`;
+  return `<article class="slide word-cloud-slide-v11"><div class="cloud-title-block"><div class="live-badge cloud-live-badge"><i></i>INTERACTION · WORD CLOUD</div><h2>What comes to mind when you think about AI?</h2><p class="cloud-subtitle-v13">Feelings, ideas, opportunities or concerns — share the first thing that comes to mind.</p></div><div class="cloud-frame-v11">${renderWordCloud()}</div></article>`;
 }
 
 function renderBars(def,agg){
@@ -311,7 +375,7 @@ function slideRetrieval(){
 
 function slideSourceDocument(){
   const livePdf=`/api/session/${encodeURIComponent(sessionId)}/live-results.pdf`;
-  return `<article class="slide source-slide source-v11"><div class="eyebrow">Built with AI</div><h2>This presentation was generated with AI.</h2><div class="source-v11-grid"><div class="source-preview-v11"><div class="doc-preview"><img src="/docs/AI_Pulse_Cahier_Source_preview.png" alt="AI Pulse source document preview"></div><div class="source-actions"><a class="btn primary" href="${livePdf}" target="_blank">Open live PDF</a><a class="btn secondary" href="/docs/AI_Pulse_Cahier_Source.docx" target="_blank">Open static DOCX</a></div><small>The PDF adds a live workshop-results page while the rest of the source document remains visually unchanged.</small></div><div class="fake-prompt-v11"><span class="panel-label">Example prompt summary</span><pre>ROLE
+  return `<article class="slide source-slide source-v11"><div class="eyebrow">Built with AI</div><h2>This presentation was generated with AI.</h2><p class="source-subtitle-v13">Here are the resources in the format you want:</p><div class="source-v11-grid"><div class="source-preview-v11"><div class="doc-preview"><img src="/docs/AI_Pulse_Cahier_Source_preview.png" alt="Petit dej IA source document preview"></div><div class="source-actions"><a class="btn primary" href="${livePdf}" target="_blank">Petit dej IA.pdf</a><a class="btn secondary" href="/docs/Petit_dej_IA.docx" target="_blank">Petit dej IA.docx</a></div><small>The PDF adds a live workshop-results page while the rest of the source document remains visually unchanged.</small></div><div class="fake-prompt-v11"><span class="panel-label">Example prompt summary</span><pre>ROLE
 You are an AI workshop designer and facilitator.
 
 OBJECTIVE
